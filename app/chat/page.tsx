@@ -81,11 +81,11 @@ function MessageBubble({ msg }: { msg: ChatMessage }) {
         {/* Main answer bubble */}
         <div className="chat-bubble-ai px-5 py-4">
           <div className="flex items-center gap-2 mb-3">
-            <div className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0"
+            <div className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0 overflow-hidden"
               style={{ background: "rgba(255,255,255,0.08)" }}>
-              <Zap size={11} style={{ color: "#C7C7C7" }} />
+              <img src="/duck.png" alt="DataDuck Logo" className="w-4 h-4 object-contain" />
             </div>
-            <span className="text-xs font-semibold" style={{ color: "#4A4A4A" }}>QUERYMIND ANALYST</span>
+            <span className="text-xs font-semibold" style={{ color: "#4A4A4A" }}>DATADUCK ANALYST</span>
             {msg.result?.execution_time_ms && (
               <span className="text-xs ml-auto" style={{ color: "#2A2A2A" }}>
                 {msg.result.execution_time_ms.toFixed(0)}ms
@@ -349,15 +349,15 @@ function ChatContent() {
   const emptyState = messages.length === 0 && !loadingHistory;
 
   return (
-    <div className="min-h-screen flex" style={{ background: "var(--bg-void)" }}>
+    <div className="h-screen w-screen overflow-hidden flex" style={{ background: "var(--bg-void)" }}>
       {/* Sidebar */}
-      <div className="sidebar w-64 flex flex-col p-4 flex-shrink-0">
-        <Link href="/" className="flex items-center gap-2.5 px-2 py-3 mb-4">
-          <div className="w-7 h-7 rounded-lg flex items-center justify-center"
-            style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)" }}>
-            <Database size={14} style={{ color: "#C7C7C7" }} />
+      <div className="sidebar w-64 h-full flex flex-col p-4 flex-shrink-0">
+        <Link href="/" className="flex items-center gap-2 px-2 py-3 mb-4 group">
+          <img src="/duck.png" alt="DataDuck Logo" className="w-10 h-10 object-contain transition-transform group-hover:scale-105" />
+          <div className="flex flex-col justify-center">
+            <span className="font-bold text-lg text-gradient-silver leading-none">DataDuck</span>
+            <span className="text-[10px] tracking-wider uppercase font-semibold text-gray-400 mt-0.5">Ask. Dig. Discover.</span>
           </div>
-          <span className="font-bold text-gradient-silver">QueryMind</span>
         </Link>
 
         <button onClick={handleNewChat}
@@ -441,7 +441,7 @@ function ChatContent() {
       </div>
 
       {/* Chat main area */}
-      <div className="flex-1 flex flex-col min-h-0">
+      <div className="flex-1 flex flex-col h-full min-h-0 min-w-0 overflow-hidden">
         {/* Header */}
         <div className="px-6 py-4 flex items-center justify-between flex-shrink-0"
           style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
@@ -470,7 +470,7 @@ function ChatContent() {
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto px-6 py-6">
+        <div className="flex-1 overflow-y-auto px-6 py-6 min-h-0">
           {loadingHistory ? (
             <div className="text-center py-20">
               <Loader2 size={24} className="animate-spin mx-auto mb-3" style={{ color: "#4A4A4A" }} />
@@ -570,7 +570,7 @@ function ChatContent() {
                 </button>
               </div>
               <p className="text-xs text-center mt-2" style={{ color: "#2A2A2A" }}>
-                Read-only mode — QueryMind can never modify your data. Press ⏎ to send, Shift+⏎ for new line.
+                Read-only mode — DataDuck can never modify your data. Press ⏎ to send, Shift+⏎ for new line.
               </p>
             </div>
           </div>

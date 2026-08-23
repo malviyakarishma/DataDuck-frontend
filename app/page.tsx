@@ -29,12 +29,12 @@ function Navbar() {
     <nav className={`navbar transition-smooth ${scrolled ? "shadow-2xl" : ""}`}>
       <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center"
-            style={{ background: "linear-gradient(135deg, #1A1A1A, #111)", border: "1px solid rgba(255,255,255,0.15)" }}>
-            <Database size={16} className="text-gradient-silver" style={{ color: "#C7C7C7" }} />
+        <Link href="/" className="flex items-center gap-2 group">
+          <img src="/duck.png" alt="DataDuck Logo" className="w-11 h-11 object-contain transition-transform group-hover:scale-105" />
+          <div className="flex flex-col justify-center">
+            <span className="font-bold text-xl tracking-tight text-gradient-silver leading-none">DataDuck</span>
+            <span className="text-[10px] tracking-wider uppercase font-semibold text-gray-400 mt-0.5">Ask. Dig. Discover.</span>
           </div>
-          <span className="font-bold text-lg tracking-tight text-gradient-silver">QueryMind</span>
         </Link>
 
         {/* Nav Links */}
@@ -80,10 +80,12 @@ function Hero() {
         </div>
 
         {/* Main headline */}
-        <h1 className="text-5xl md:text-7xl font-bold leading-none mb-6 animate-fade-in"
+        <h1 className="text-5xl md:text-7xl font-bold leading-tight mb-6 animate-fade-in"
           style={{ animationDelay: "0.1s" }}>
-          <span className="text-gradient-silver block">Your Database.</span>
-          <span className="text-gradient-silver block">Now It Talks Back.</span>
+          <span className="text-gradient-silver block">Your Data Has Answers.</span>
+          <span className="text-gradient-silver block mt-2 font-extrabold text-4xl md:text-6xl text-gray-300">
+            DataDuck Digs Them Out.
+          </span>
         </h1>
 
         <p className="text-lg md:text-xl max-w-2xl mx-auto mb-10 animate-fade-in"
@@ -111,12 +113,12 @@ function Hero() {
           <div className="card-luxury p-8 max-w-3xl mx-auto">
             <div className="flex items-center justify-between gap-4 mb-6">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg flex items-center justify-center"
-                  style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)" }}>
-                  <Server size={20} style={{ color: "#C7C7C7" }} />
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                  style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)" }}>
+                  <img src="/duck.png" alt="DataDuck" className="w-5 h-5 object-contain" />
                 </div>
-                <div className="text-left">
-                  <div className="text-sm font-semibold" style={{ color: "#C7C7C7" }}>production_db</div>
+                <div>
+                  <span className="text-xs font-semibold" style={{ color: "#6B6B6B" }}>DATADUCK ANALYST</span>
                   <div className="text-xs" style={{ color: "#6B6B6B" }}>PostgreSQL · Connected</div>
                 </div>
               </div>
@@ -136,12 +138,12 @@ function Hero() {
 
               <div className="flex items-center gap-3">
                 <div className="text-right">
-                  <div className="text-sm font-semibold" style={{ color: "#C7C7C7" }}>QueryMind AI</div>
+                  <div className="text-sm font-semibold" style={{ color: "#C7C7C7" }}>DataDuck AI</div>
                   <div className="text-xs" style={{ color: "#6B6B6B" }}>Powered by Gemini</div>
                 </div>
-                <div className="w-10 h-10 rounded-lg flex items-center justify-center"
+                <div className="w-10 h-10 rounded-lg flex items-center justify-center overflow-hidden"
                   style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)" }}>
-                  <MessageSquare size={20} style={{ color: "#C7C7C7" }} />
+                  <img src="/duck.png" alt="DataDuck Logo" className="w-7 h-7 object-contain" />
                 </div>
               </div>
             </div>
@@ -152,7 +154,7 @@ function Hero() {
             </div>
 
             <div className="mt-3 p-4 rounded-xl text-left" style={{ background: "rgba(255,255,255,0.015)", border: "1px solid rgba(255,255,255,0.06)" }}>
-              <div className="text-xs mb-1" style={{ color: "#6B6B6B" }}>QUERYMIND</div>
+              <div className="text-xs mb-1" style={{ color: "#6B6B6B" }}>DATADUCK</div>
               <p className="text-sm" style={{ color: "#AFAFAF" }}>
                 "Acme Corp leads with $428,500 in total purchases, followed by TechStar at $312,000.
                 Together your top 5 customers account for 61% of total revenue."
@@ -194,7 +196,7 @@ function ProductPreview() {
       <div className="max-w-6xl mx-auto px-6">
         <div className="text-center mb-16">
           <h2 className="text-4xl font-bold mb-4 text-gradient-silver">See It In Action</h2>
-          <p className="text-lg" style={{ color: "#8A8A8A" }}>Watch QueryMind answer real database questions instantly.</p>
+          <p className="text-lg" style={{ color: "#8A8A8A" }}>Watch DataDuck answer real database questions instantly.</p>
         </div>
 
         {/* Demo selector */}
@@ -239,11 +241,11 @@ function ProductPreview() {
             <div className="flex flex-col gap-3">
               <div className="chat-bubble-ai p-4 max-w-2xl">
                 <div className="flex items-center gap-2 mb-2">
-                  <div className="w-5 h-5 rounded flex items-center justify-center"
+                  <div className="w-5 h-5 rounded flex items-center justify-center overflow-hidden"
                     style={{ background: "rgba(255,255,255,0.08)" }}>
-                    <Zap size={10} style={{ color: "#C7C7C7" }} />
+                    <img src="/duck.png" alt="DataDuck Logo" className="w-4 h-4 object-contain" />
                   </div>
-                  <span className="text-xs font-semibold" style={{ color: "#6B6B6B" }}>QUERYMIND ANALYST</span>
+                  <span className="text-xs font-semibold" style={{ color: "#6B6B6B" }}>DATADUCK ANALYST</span>
                 </div>
                 <p className="text-sm" style={{ color: "#AFAFAF" }}>{current.ai}</p>
               </div>
@@ -300,12 +302,12 @@ function Features() {
     {
       icon: <MessageSquare size={22} style={{ color: "#C7C7C7" }} />,
       title: "Natural Language Queries",
-      desc: "Ask anything in plain English. QueryMind translates your question into the correct SQL or MongoDB query automatically.",
+      desc: "Ask anything in plain English. DataDuck translates your question into the correct SQL or MongoDB query automatically.",
     },
     {
       icon: <BarChart3 size={22} style={{ color: "#C7C7C7" }} />,
       title: "Automatic Visualizations",
-      desc: "QueryMind selects the best chart type for your data — bar, line, pie, scatter — rendered instantly without manual configuration.",
+      desc: "DataDuck selects the best chart type for your data — bar, line, pie, scatter — rendered instantly without manual configuration.",
     },
     {
       icon: <Eye size={22} style={{ color: "#C7C7C7" }} />,
@@ -325,7 +327,7 @@ function Features() {
     {
       icon: <Zap size={22} style={{ color: "#C7C7C7" }} />,
       title: "Conversational Context",
-      desc: "Ask follow-up questions naturally. QueryMind remembers conversation context and generates fresh, safe queries each time.",
+      desc: "Ask follow-up questions naturally. DataDuck remembers conversation context and generates fresh, safe queries each time.",
     },
   ];
 
@@ -416,7 +418,7 @@ function SecuritySection() {
           </div>
           <h2 className="text-4xl font-bold mb-4 text-gradient-silver">Security Is the Product</h2>
           <p className="text-lg max-w-xl mx-auto" style={{ color: "#8A8A8A" }}>
-            QueryMind is architecturally read-only. Your data cannot be modified through this platform — by design.
+            DataDuck is architecturally read-only. Your data cannot be modified through this platform — by design.
           </p>
         </div>
 
@@ -459,7 +461,7 @@ function SecuritySection() {
         <div className="mt-8 p-6 rounded-2xl" style={{ background: "rgba(251,191,36,0.04)", border: "1px solid rgba(251,191,36,0.12)" }}>
           <p className="text-sm text-center" style={{ color: "#FDE68A" }}>
             <strong>Recommended:</strong> Connect using a read-only database user for maximum safety.
-            QueryMind enforces read-only at the application level, but database-level restrictions add an extra layer of defense.
+            DataDuck enforces read-only at the application level, but database-level restrictions add an extra layer of defense.
           </p>
         </div>
       </div>
@@ -474,11 +476,14 @@ function Footer() {
       <div className="max-w-7xl mx-auto px-6 py-12">
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-2">
-            <Database size={16} style={{ color: "#C7C7C7" }} />
-            <span className="font-bold text-gradient-silver">QueryMind</span>
+            <img src="/duck.png" alt="DataDuck Logo" className="w-9 h-9 object-contain" />
+            <div className="flex flex-col justify-center">
+              <span className="font-bold text-lg text-gradient-silver leading-none">DataDuck</span>
+              <span className="text-[10px] tracking-wider uppercase font-medium text-gray-500 mt-0.5">Ask. Dig. Discover.</span>
+            </div>
           </div>
           <p className="text-sm" style={{ color: "#4A4A4A" }}>
-            © {new Date().getFullYear()} QueryMind. AI-powered database analytics. Read-only. Secure.
+            © {new Date().getFullYear()} DataDuck. Ask. Dig. Discover. Read-only. Secure.
           </p>
           <div className="flex gap-6">
             <Link href="/login" className="text-sm transition-smooth" style={{ color: "#4A4A4A" }}

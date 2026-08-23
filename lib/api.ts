@@ -1,4 +1,4 @@
-// Typed API client for QueryMind frontend
+// Typed API client for DataDuck frontend
 // All requests go through this client — never expose credentials in URLs
 
 import axios, { AxiosError, AxiosRequestConfig } from 'axios';
@@ -17,18 +17,7 @@ const apiClient = axios.create({
   },
 });
 
-// Request interceptor — attach access token if present
-apiClient.interceptors.request.use((config) => {
-  if (typeof window !== 'undefined') {
-    const token = localStorage.getItem('access_token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-  }
-  return config;
-});
-
-// Response interceptor — handle access token expiry & refresh token expiry
+// Response interceptor — handle access token expiry & refresh token expiry via HttpOnly cookies
 apiClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
@@ -46,32 +35,20 @@ apiClient.interceptors.response.use(
         return Promise.reject(error);
       }
 
-      // 1. Access token expired — attempt refresh token once
+      // 1. Access token expired — attempt cookie refresh once
       if (!originalRequest._retry) {
         originalRequest._retry = true;
         try {
-          const refreshToken = localStorage.getItem('refresh_token');
-          if (refreshToken) {
-            const res = await axios.post(`${API_BASE_URL}/auth/refresh`, {
-              refresh_token: refreshToken,
-            }, { withCredentials: true });
-            
-            const { access_token, refresh_token: new_refresh } = res.data;
-            localStorage.setItem('access_token', access_token);
-            if (new_refresh) {
-              localStorage.setItem('refresh_token', new_refresh);
-            }
-            if (originalRequest.headers) {
-              (originalRequest.headers as Record<string, string>)['Authorization'] = `Bearer ${access_token}`;
-            }
-            return apiClient(originalRequest);
-          }
+          // Send request with credentials so refresh_token cookie is attached
+          await axios.post(`${API_BASE_URL}/auth/refresh`, {}, { withCredentials: true });
+          // Retry original request (browser will now send the newly refreshed access_token cookie)
+          return apiClient(originalRequest);
         } catch {
           // Token refresh failed (Refresh token expired or invalid)
         }
       }
 
-      // 2. Refresh token expired or missing -> throw user outside immediately (clear tokens & redirect)
+      // 2. Refresh token expired or missing -> clear local state & redirect to login
       _clearTokens();
       if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
         window.location.href = '/login';
@@ -108,15 +85,18 @@ export const authApi = {
 
   login: async (data: { email: string; password: string }): Promise<LoginResponse> => {
     const res = await apiClient.post('/auth/login', data);
-    if (!res.data.requires_otp && res.data.access_token) {
+    if (!res.data.requires_otp && (res.data.user_id || res.data.email)) {
       _storeTokens(res.data);
     }
     return res.data;
   },
 
   logout: async (): Promise<void> => {
-    await apiClient.post('/auth/logout');
-    _clearTokens();
+    try {
+      await apiClient.post('/auth/logout');
+    } finally {
+      _clearTokens();
+    }
   },
 
   getMe: async (): Promise<User> => {
@@ -203,8 +183,6 @@ export const healthApi = {
 
 function _storeTokens(data: TokenResponse | LoginResponse) {
   if (typeof window !== 'undefined') {
-    if (data.access_token) localStorage.setItem('access_token', data.access_token);
-    if (data.refresh_token) localStorage.setItem('refresh_token', data.refresh_token);
     if (data.user_id) localStorage.setItem('user_id', data.user_id);
     if (data.email) localStorage.setItem('user_email', data.email);
     if (data.full_name) localStorage.setItem('user_name', data.full_name);
@@ -213,8 +191,6 @@ function _storeTokens(data: TokenResponse | LoginResponse) {
 
 function _clearTokens() {
   if (typeof window !== 'undefined') {
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
     localStorage.removeItem('user_id');
     localStorage.removeItem('user_email');
     localStorage.removeItem('user_name');
@@ -234,7 +210,7 @@ export function getApiErrorMessage(error: unknown): string {
 
 export function isAuthenticated(): boolean {
   if (typeof window === 'undefined') return false;
-  return !!localStorage.getItem('access_token');
+  return !!(localStorage.getItem('user_email') || localStorage.getItem('user_id'));
 }
 
 export function getCurrentUserName(): string {

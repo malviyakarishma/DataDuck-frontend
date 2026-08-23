@@ -68,12 +68,12 @@ export default function DashboardPage() {
       {/* Sidebar */}
       <div className="sidebar w-64 flex flex-col p-4 flex-shrink-0">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2.5 px-2 py-3 mb-6">
-          <div className="w-7 h-7 rounded-lg flex items-center justify-center"
-            style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)" }}>
-            <Database size={14} style={{ color: "#C7C7C7" }} />
+        <Link href="/" className="flex items-center gap-2 px-2 py-3 mb-6 group">
+          <img src="/duck.png" alt="DataDuck Logo" className="w-10 h-10 object-contain transition-transform group-hover:scale-105" />
+          <div className="flex flex-col justify-center">
+            <span className="font-bold text-lg text-gradient-silver leading-none">DataDuck</span>
+            <span className="text-[10px] tracking-wider uppercase font-semibold text-gray-400 mt-0.5">Ask. Dig. Discover.</span>
           </div>
-          <span className="font-bold text-gradient-silver">QueryMind</span>
         </Link>
 
         {/* New Chat */}

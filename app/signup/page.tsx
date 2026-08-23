@@ -168,12 +168,12 @@ export default function SignupPage() {
 
       <div className="w-full max-w-md animate-scale-in">
         <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-2 mb-6">
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center"
-              style={{ background: "linear-gradient(135deg, #1A1A1A, #111)", border: "1px solid rgba(255,255,255,0.15)" }}>
-              <Database size={18} style={{ color: "#C7C7C7" }} />
+          <Link href="/" className="inline-flex items-center gap-2 mb-6 group">
+            <img src="/duck.png" alt="DataDuck Logo" className="w-14 h-14 object-contain transition-transform group-hover:scale-105" />
+            <div className="text-left flex flex-col justify-center">
+              <span className="font-bold text-3xl text-gradient-silver block leading-tight tracking-tight">DataDuck</span>
+              <span className="text-xs font-semibold tracking-wider text-gray-400 mt-0.5 block">Ask. Dig. Discover.</span>
             </div>
-            <span className="font-bold text-xl text-gradient-silver">QueryMind</span>
           </Link>
           <h1 className="text-2xl font-bold mb-2" style={{ color: "#E5E7EB" }}>
             {step === "register" ? "Create your account" : "Two-Factor Verification"}

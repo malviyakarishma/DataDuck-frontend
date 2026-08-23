@@ -84,7 +84,13 @@ export default function SettingsPage() {
 
         {/* About */}
         <div className="card-luxury p-6">
-          <h2 className="text-sm font-semibold mb-4 uppercase tracking-wider" style={{ color: "#4A4A4A" }}>About QueryMind</h2>
+          <div className="flex items-center gap-2 mb-4">
+            <img src="/duck.png" alt="DataDuck Logo" className="w-10 h-10 object-contain" />
+            <div className="flex flex-col justify-center">
+              <h2 className="text-base font-semibold uppercase tracking-wider leading-none" style={{ color: "#E5E7EB" }}>About DataDuck</h2>
+              <span className="text-[10px] uppercase font-medium tracking-widest text-gray-500 mt-0.5 block">Ask. Dig. Discover.</span>
+            </div>
+          </div>
           <div className="space-y-2 text-sm" style={{ color: "#6B6B6B" }}>
             <p>Version: 1.0.0</p>
             <p>All database connections are encrypted at rest using Fernet symmetric encryption.</p>

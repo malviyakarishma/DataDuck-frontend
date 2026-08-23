@@ -1,4 +1,4 @@
-// Shared TypeScript types for QueryMind frontend
+// Shared TypeScript types for DataDuck frontend
 
 export interface User {
   id: string;
