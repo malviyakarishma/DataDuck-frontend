@@ -4,7 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
   Database, MessageSquare, Plus, Settings, LogOut, Send, Loader2,
-  ChevronDown, ChevronUp, BarChart3, AlertTriangle, Info, Zap, Code2, X
+  ChevronDown, ChevronUp, BarChart3, AlertTriangle, Info, Zap, Code2, X, Trash2, Check
 } from "lucide-react";
 import { chatApi, databasesApi, authApi, isAuthenticated, ensureAuthenticated, getCurrentUserName } from "@/lib/api";
 import type { ChatMessage, Conversation, DatabaseConnection, LoadingStage } from "@/lib/types";
@@ -217,6 +217,13 @@ function ChatContent() {
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [isSchemaModalOpen, setIsSchemaModalOpen] = useState(false);
   const [userName, setUserName] = useState("there");
+  const [deleteModal, setDeleteModal] = useState<{
+    isOpen: boolean;
+    type: "single" | "all";
+    conversationId?: string;
+    title?: string;
+  }>({ isOpen: false, type: "single" });
+  const [deleting, setDeleting] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -291,6 +298,46 @@ function ChatContent() {
       setMessages(msgData.messages);
     } catch { /* */ } finally {
       setLoadingHistory(false);
+    }
+  };
+
+  const openDeleteSingleModal = (convId: string, title: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setDeleteModal({
+      isOpen: true,
+      type: "single",
+      conversationId: convId,
+      title: title || "this conversation",
+    });
+  };
+
+  const openDeleteAllModal = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setDeleteModal({
+      isOpen: true,
+      type: "all",
+    });
+  };
+
+  const confirmDelete = async () => {
+    setDeleting(true);
+    try {
+      if (deleteModal.type === "single" && deleteModal.conversationId) {
+        await chatApi.deleteConversation(deleteModal.conversationId);
+        setConversations((prev) => prev.filter((c) => c.id !== deleteModal.conversationId));
+        if (currentConversationId === deleteModal.conversationId) {
+          handleNewChat();
+        }
+      } else if (deleteModal.type === "all") {
+        await chatApi.deleteAllConversations(selectedDb?.id);
+        setConversations([]);
+        handleNewChat();
+      }
+    } catch (err) {
+      console.error("Failed to delete conversation(s):", err);
+    } finally {
+      setDeleting(false);
+      setDeleteModal({ isOpen: false, type: "single" });
     }
   };
 
@@ -394,7 +441,7 @@ function ChatContent() {
     <div className="h-screen w-screen overflow-hidden flex" style={{ background: "var(--bg-void)" }}>
       {/* Sidebar */}
       <div className="sidebar w-64 h-full flex flex-col p-4 flex-shrink-0">
-        <Link href="/" className="flex items-center gap-2 px-2 py-3 mb-4 group">
+        <Link href="/dashboard" className="flex items-center gap-2 px-2 py-3 mb-4 group">
           <img src="/duck.png" alt="DataDuck Logo" className="w-10 h-10 object-contain transition-transform group-hover:scale-105" />
           <div className="flex flex-col justify-center">
             <span className="font-bold text-lg text-gradient-silver leading-none">DataDuck</span>
@@ -456,21 +503,60 @@ function ChatContent() {
         </nav>
 
         {/* Conversations */}
-        <div className="flex-1 overflow-y-auto">
-          <p className="text-xs px-1 mb-2 uppercase tracking-wider" style={{ color: "#4A4A4A" }}>Conversations</p>
-          {conversations.map((conv) => (
-            <button key={conv.id} onClick={() => loadConversation(conv.id)}
-              className="w-full flex items-start gap-2 px-3 py-2 rounded-xl text-left transition-smooth mb-1"
-              style={{
-                background: currentConversationId === conv.id ? "rgba(255,255,255,0.06)" : "transparent",
-                color: currentConversationId === conv.id ? "#AFAFAF" : "#4A4A4A",
-              }}
-              onMouseEnter={(e) => { if (currentConversationId !== conv.id) { e.currentTarget.style.background = "rgba(255,255,255,0.03)"; e.currentTarget.style.color = "#6B6B6B"; } }}
-              onMouseLeave={(e) => { if (currentConversationId !== conv.id) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#4A4A4A"; } }}>
-              <MessageSquare size={13} className="flex-shrink-0 mt-0.5" />
-              <span className="text-xs truncate">{conv.title}</span>
-            </button>
-          ))}
+        <div className="flex-1 overflow-y-auto min-h-0">
+          <div className="flex items-center justify-between px-1 mb-2">
+            <p className="text-xs uppercase tracking-wider font-semibold" style={{ color: "#4A4A4A" }}>Conversations</p>
+            {conversations.length > 0 && (
+              <button
+                onClick={openDeleteAllModal}
+                className="text-[11px] text-neutral-500 hover:text-red-400 flex items-center gap-1 transition-smooth px-1.5 py-0.5 rounded hover:bg-red-500/10"
+                title="Delete all conversations"
+              >
+                <Trash2 size={11} /> Clear all
+              </button>
+            )}
+          </div>
+          {conversations.length === 0 ? (
+            <p className="text-xs px-2 py-3 text-neutral-600 italic">No conversations yet</p>
+          ) : (
+            conversations.map((conv) => (
+              <div
+                key={conv.id}
+                onClick={() => loadConversation(conv.id)}
+                className="group relative w-full flex items-center justify-between px-3 py-2 rounded-xl text-left transition-smooth mb-1 cursor-pointer"
+                style={{
+                  background: currentConversationId === conv.id ? "rgba(255,255,255,0.06)" : "transparent",
+                  color: currentConversationId === conv.id ? "#E2E8F0" : "#6B7280",
+                  border: currentConversationId === conv.id ? "1px solid rgba(255,255,255,0.08)" : "1px solid transparent",
+                }}
+                onMouseEnter={(e) => {
+                  if (currentConversationId !== conv.id) {
+                    e.currentTarget.style.background = "rgba(255,255,255,0.03)";
+                    e.currentTarget.style.color = "#94A3B8";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (currentConversationId !== conv.id) {
+                    e.currentTarget.style.background = "transparent";
+                    e.currentTarget.style.color = "#6B7280";
+                  }
+                }}
+              >
+                <div className="flex items-center gap-2 min-w-0 flex-1 mr-1">
+                  <MessageSquare size={13} className="flex-shrink-0" />
+                  <span className="text-xs truncate">{conv.title}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={(e) => openDeleteSingleModal(conv.id, conv.title, e)}
+                  className="opacity-0 group-hover:opacity-100 p-1 rounded-md text-neutral-500 hover:text-red-400 hover:bg-red-500/10 transition-smooth flex-shrink-0"
+                  title="Delete conversation"
+                >
+                  <Trash2 size={12} />
+                </button>
+              </div>
+            ))
+          )}
         </div>
 
         <button onClick={handleLogout}
@@ -642,6 +728,62 @@ function ChatContent() {
             handleSend(prompt || `Explain the ${tableName} table`);
           }}
         />
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteModal.isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in">
+          <div
+            className="w-full max-w-md p-6 rounded-2xl border shadow-2xl animate-scale-in"
+            style={{
+              background: "#111318",
+              borderColor: "rgba(255, 255, 255, 0.1)",
+            }}
+          >
+            <div className="flex items-center gap-3.5 mb-4">
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-red-500/10 border border-red-500/20 text-red-400 flex-shrink-0">
+                <Trash2 size={20} />
+              </div>
+              <div>
+                <h3 className="text-base font-semibold text-white">
+                  {deleteModal.type === "all" ? "Delete All Conversations?" : "Delete Conversation?"}
+                </h3>
+                <p className="text-xs text-neutral-400 mt-0.5 leading-relaxed">
+                  {deleteModal.type === "all"
+                    ? `This will permanently remove all ${conversations.length} conversation history entries. This action cannot be undone.`
+                    : `Are you sure you want to delete "${deleteModal.title}"? This cannot be undone.`}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 mt-6 pt-3 border-t border-white/5">
+              <button
+                type="button"
+                onClick={() => setDeleteModal({ isOpen: false, type: "single" })}
+                disabled={deleting}
+                className="px-4 py-2 text-xs font-medium text-neutral-300 hover:text-white bg-neutral-800/60 hover:bg-neutral-800 rounded-xl border border-neutral-700/50 transition-smooth"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={confirmDelete}
+                disabled={deleting}
+                className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-red-600 hover:bg-red-500 rounded-xl shadow-lg shadow-red-950/50 transition-smooth disabled:opacity-50"
+              >
+                {deleting ? (
+                  <>
+                    <Loader2 size={13} className="animate-spin" /> Deleting...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 size={13} /> Delete
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

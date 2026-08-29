@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   Database, MessageSquare, Plus, Settings, LogOut, ChevronRight,
-  Server, BarChart3, Loader2, Clock
+  Server, BarChart3, Loader2, Clock, Trash2
 } from "lucide-react";
 import { authApi, databasesApi, chatApi, getApiErrorMessage, getCurrentUserName, isAuthenticated, ensureAuthenticated } from "@/lib/api";
 import type { DatabaseConnection, Conversation } from "@/lib/types";
@@ -72,7 +72,7 @@ export default function DashboardPage() {
       {/* Sidebar */}
       <div className="sidebar w-64 flex flex-col p-4 flex-shrink-0">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 px-2 py-3 mb-6 group">
+        <Link href="/dashboard" className="flex items-center gap-2 px-2 py-3 mb-6 group">
           <img src="/duck.png" alt="DataDuck Logo" className="w-10 h-10 object-contain transition-transform group-hover:scale-105" />
           <div className="flex flex-col justify-center">
             <span className="font-bold text-lg text-gradient-silver leading-none">DataDuck</span>
@@ -113,9 +113,10 @@ export default function DashboardPage() {
         {conversations.length > 0 && (
           <div className="mt-4 mb-4">
             <p className="text-xs px-3 mb-2 uppercase tracking-wider" style={{ color: "#4A4A4A" }}>Recent</p>
-            {conversations.slice(0, 4).map((conv) => (
-              <Link key={conv.id} href={`/chat?conversation=${conv.id}`}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg transition-smooth group"
+            {conversations.slice(0, 5).map((conv) => (
+              <div
+                key={conv.id}
+                className="flex items-center justify-between px-3 py-2 rounded-lg transition-smooth group"
                 style={{ color: "#4A4A4A" }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.background = "rgba(255,255,255,0.04)";
@@ -125,9 +126,30 @@ export default function DashboardPage() {
                   e.currentTarget.style.background = "transparent";
                   e.currentTarget.style.color = "#4A4A4A";
                 }}>
-                <MessageSquare size={13} className="flex-shrink-0" />
-                <span className="text-xs truncate">{conv.title}</span>
-              </Link>
+                <Link href={`/chat?conversation=${conv.id}`} className="flex items-center gap-2 min-w-0 flex-1">
+                  <MessageSquare size={13} className="flex-shrink-0" />
+                  <span className="text-xs truncate">{conv.title}</span>
+                </Link>
+                <button
+                  type="button"
+                  onClick={async (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (confirm(`Delete "${conv.title}"?`)) {
+                      try {
+                        await chatApi.deleteConversation(conv.id);
+                        setConversations((prev) => prev.filter((c) => c.id !== conv.id));
+                      } catch (err) {
+                        console.error(err);
+                      }
+                    }
+                  }}
+                  className="opacity-0 group-hover:opacity-100 p-1 text-neutral-500 hover:text-red-400 rounded transition-smooth ml-1"
+                  title="Delete conversation"
+                >
+                  <Trash2 size={12} />
+                </button>
+              </div>
             ))}
           </div>
         )}

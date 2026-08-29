@@ -229,6 +229,13 @@ export const chatApi = {
   deleteConversation: async (conversationId: string): Promise<void> => {
     await apiClient.delete(`/chat/conversations/${conversationId}`);
   },
+
+  deleteAllConversations: async (databaseId?: string): Promise<{ deleted: number }> => {
+    const res = await apiClient.delete('/chat/conversations', {
+      params: databaseId ? { database_id: databaseId } : {},
+    });
+    return res.data;
+  },
 };
 
 // ── Health ─────────────────────────────────────────────────────────────────

@@ -30,6 +30,12 @@ export default function SignupPage() {
 
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
+  useEffect(() => {
+    if (isAuthenticated()) {
+      router.push("/dashboard");
+    }
+  }, []);
+
   // Password strength calculator
   const passwordStrength = (() => {
     const p = form.password;

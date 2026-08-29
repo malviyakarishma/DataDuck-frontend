@@ -3,8 +3,9 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { Database, MessageSquare, Shield, BarChart3, ChevronDown, ArrowRight, Lock, Eye, Zap, Server, CheckCircle, X } from "lucide-react";
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
+import { isAuthenticated } from "@/lib/api";
 
 // ── Mock chart data for product preview ──
 const mockRevenueData = [
@@ -16,7 +17,7 @@ const mockRevenueData = [
 ];
 
 // ── Navbar ──────────────────────────────────────────────────────────────────
-function Navbar() {
+function Navbar({ loggedIn }: { loggedIn: boolean }) {
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -29,7 +30,7 @@ function Navbar() {
     <nav className={`navbar transition-smooth ${scrolled ? "shadow-2xl" : ""}`}>
       <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 group">
+        <Link href={loggedIn ? "/dashboard" : "/"} className="flex items-center gap-2 group">
           <img src="/duck.png" alt="DataDuck Logo" className="w-11 h-11 object-contain transition-transform group-hover:scale-105" />
           <div className="flex flex-col justify-center">
             <span className="font-bold text-xl tracking-tight text-gradient-silver leading-none">DataDuck</span>
@@ -39,21 +40,35 @@ function Navbar() {
 
         {/* Nav Links */}
         <div className="hidden md:flex items-center gap-8">
-          {["Features", "How It Works", "Security"].map((item) => (
-            <a key={item} href={`#${item.toLowerCase().replace(" ", "-")}`}
-              className="text-sm transition-smooth"
-              style={{ color: "#8A8A8A" }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = "#C7C7C7")}
-              onMouseLeave={(e) => (e.currentTarget.style.color = "#8A8A8A")}>
-              {item}
-            </a>
-          ))}
+          {loggedIn ? (
+            <>
+              <Link href="/dashboard" className="text-sm text-neutral-400 hover:text-neutral-200 transition-smooth">Dashboard</Link>
+              <Link href="/chat" className="text-sm text-neutral-400 hover:text-neutral-200 transition-smooth">Chat</Link>
+              <Link href="/databases" className="text-sm text-neutral-400 hover:text-neutral-200 transition-smooth">Databases</Link>
+            </>
+          ) : (
+            ["Features", "How It Works", "Security"].map((item) => (
+              <a key={item} href={`#${item.toLowerCase().replace(" ", "-")}`}
+                className="text-sm transition-smooth"
+                style={{ color: "#8A8A8A" }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = "#C7C7C7")}
+                onMouseLeave={(e) => (e.currentTarget.style.color = "#8A8A8A")}>
+                {item}
+              </a>
+            ))
+          )}
         </div>
 
         {/* CTA */}
         <div className="flex items-center gap-3">
-          <Link href="/login" className="btn-ghost text-sm py-2 px-4">Login</Link>
-          <Link href="/signup" className="btn-primary text-sm py-2 px-5">Get Started</Link>
+          {loggedIn ? (
+            <Link href="/dashboard" className="btn-primary text-sm py-2 px-5">Go to Dashboard</Link>
+          ) : (
+            <>
+              <Link href="/login" className="btn-ghost text-sm py-2 px-4">Login</Link>
+              <Link href="/signup" className="btn-primary text-sm py-2 px-5">Get Started</Link>
+            </>
+          )}
         </div>
       </div>
     </nav>
@@ -61,7 +76,7 @@ function Navbar() {
 }
 
 // ── Hero ─────────────────────────────────────────────────────────────────────
-function Hero() {
+function Hero({ loggedIn }: { loggedIn: boolean }) {
   return (
     <section className="hero-bg min-h-screen flex items-center justify-center relative overflow-hidden">
       {/* Background grid */}
@@ -98,14 +113,29 @@ function Hero() {
         {/* CTAs */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in"
           style={{ animationDelay: "0.3s" }}>
-          <Link href="/signup" className="btn-primary flex items-center gap-2 justify-center text-base py-4 px-8">
-            Connect Your Database
-            <ArrowRight size={18} />
-          </Link>
-          <a href="#how-it-works" className="btn-ghost flex items-center gap-2 justify-center text-base py-4 px-8">
-            See How It Works
-            <ChevronDown size={18} />
-          </a>
+          {loggedIn ? (
+            <>
+              <Link href="/dashboard" className="btn-primary flex items-center gap-2 justify-center text-base py-4 px-8">
+                Go to Dashboard
+                <ArrowRight size={18} />
+              </Link>
+              <Link href="/chat" className="btn-ghost flex items-center gap-2 justify-center text-base py-4 px-8">
+                Open Chat
+                <MessageSquare size={18} />
+              </Link>
+            </>
+          ) : (
+            <>
+              <Link href="/signup" className="btn-primary flex items-center gap-2 justify-center text-base py-4 px-8">
+                Connect Your Database
+                <ArrowRight size={18} />
+              </Link>
+              <a href="#how-it-works" className="btn-ghost flex items-center gap-2 justify-center text-base py-4 px-8">
+                See How It Works
+                <ChevronDown size={18} />
+              </a>
+            </>
+          )}
         </div>
 
         {/* Visual DB → AI graphic */}
@@ -264,7 +294,11 @@ function ProductPreview() {
                         labelStyle={{ color: "#C7C7C7" }}
                         formatter={(v: unknown) => [`$${Number(v).toLocaleString()}`, "Revenue"]}
                       />
-                      <Bar dataKey="revenue" fill="#8B8FA8" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="revenue" radius={[4, 4, 0, 0]}>
+                        {mockRevenueData.map((_, index) => (
+                          <Cell key={`cell-${index}`} fill={["#6366F1", "#06B6D4", "#10B981", "#F59E0B", "#EC4899", "#8B5CF6"][index % 6]} />
+                        ))}
+                      </Bar>
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -470,7 +504,7 @@ function SecuritySection() {
 }
 
 // ── Footer ─────────────────────────────────────────────────────────────────
-function Footer() {
+function Footer({ loggedIn }: { loggedIn: boolean }) {
   return (
     <footer style={{ background: "var(--bg-base)", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
       <div className="max-w-7xl mx-auto px-6 py-12">
@@ -486,12 +520,21 @@ function Footer() {
             © {new Date().getFullYear()} DataDuck. Ask. Dig. Discover. Read-only. Secure.
           </p>
           <div className="flex gap-6">
-            <Link href="/login" className="text-sm transition-smooth" style={{ color: "#4A4A4A" }}
-              onMouseEnter={(e: React.MouseEvent<HTMLAnchorElement>) => (e.currentTarget.style.color = "#8A8A8A")}
-              onMouseLeave={(e: React.MouseEvent<HTMLAnchorElement>) => (e.currentTarget.style.color = "#4A4A4A")}>Login</Link>
-            <Link href="/signup" className="text-sm transition-smooth" style={{ color: "#4A4A4A" }}
-              onMouseEnter={(e: React.MouseEvent<HTMLAnchorElement>) => (e.currentTarget.style.color = "#8A8A8A")}
-              onMouseLeave={(e: React.MouseEvent<HTMLAnchorElement>) => (e.currentTarget.style.color = "#4A4A4A")}>Get Started</Link>
+            {loggedIn ? (
+              <>
+                <Link href="/dashboard" className="text-sm text-neutral-400 hover:text-neutral-200 transition-smooth">Dashboard</Link>
+                <Link href="/chat" className="text-sm text-neutral-400 hover:text-neutral-200 transition-smooth">Chat</Link>
+              </>
+            ) : (
+              <>
+                <Link href="/login" className="text-sm transition-smooth" style={{ color: "#4A4A4A" }}
+                  onMouseEnter={(e: React.MouseEvent<HTMLAnchorElement>) => (e.currentTarget.style.color = "#8A8A8A")}
+                  onMouseLeave={(e: React.MouseEvent<HTMLAnchorElement>) => (e.currentTarget.style.color = "#4A4A4A")}>Login</Link>
+                <Link href="/signup" className="text-sm transition-smooth" style={{ color: "#4A4A4A" }}
+                  onMouseEnter={(e: React.MouseEvent<HTMLAnchorElement>) => (e.currentTarget.style.color = "#8A8A8A")}
+                  onMouseLeave={(e: React.MouseEvent<HTMLAnchorElement>) => (e.currentTarget.style.color = "#4A4A4A")}>Get Started</Link>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -501,15 +544,21 @@ function Footer() {
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
 export default function LandingPage() {
+  const [loggedIn, setLoggedIn] = useState(false);
+
+  useEffect(() => {
+    setLoggedIn(isAuthenticated());
+  }, []);
+
   return (
     <div style={{ background: "var(--bg-void)" }}>
-      <Navbar />
-      <Hero />
+      <Navbar loggedIn={loggedIn} />
+      <Hero loggedIn={loggedIn} />
       <ProductPreview />
       <Features />
       <HowItWorks />
       <SecuritySection />
-      <Footer />
+      <Footer loggedIn={loggedIn} />
     </div>
   );
 }
