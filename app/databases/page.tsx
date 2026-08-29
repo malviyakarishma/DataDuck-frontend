@@ -9,6 +9,8 @@ import {
 import { databasesApi, getApiErrorMessage } from "@/lib/api";
 import type { DatabaseConnection, TestConnectionResponse } from "@/lib/types";
 
+import SchemaExplorerModal from "@/components/ui/SchemaExplorerModal";
+
 const DB_EXAMPLES: Record<string, string> = {
   postgresql: "postgresql://username:password@host:5432/database",
   mysql: "mysql://username:password@host:3306/database",
@@ -23,10 +25,11 @@ const DB_ICONS: Record<string, string> = {
   mongodb: "MG",
 };
 
-function ConnectionCard({ conn, onDelete, onChat }: {
+function ConnectionCard({ conn, onDelete, onChat, onExploreSchema }: {
   conn: DatabaseConnection;
   onDelete: (id: string) => void;
   onChat: (id: string) => void;
+  onExploreSchema: (conn: DatabaseConnection) => void;
 }) {
   const [deleting, setDeleting] = useState(false);
   const [showConn, setShowConn] = useState(false);
@@ -64,6 +67,14 @@ function ConnectionCard({ conn, onDelete, onChat }: {
         </div>
 
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => onExploreSchema(conn)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs text-neutral-300 hover:text-white border border-neutral-800 hover:border-neutral-700 bg-neutral-900/60 hover:bg-neutral-800/80 transition-smooth"
+            title="Inspect schema tables, columns, constraints and ER diagram"
+          >
+            <Database size={13} className="text-emerald-400" />
+            <span>Schema & ER</span>
+          </button>
           <button onClick={() => onChat(conn.id)}
             className="btn-primary text-xs py-1.5 px-4 flex items-center gap-1">
             Open Chat <ChevronRight size={14} />
@@ -264,6 +275,7 @@ export default function DatabasesPage() {
   const [connections, setConnections] = useState<DatabaseConnection[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [selectedSchemaDb, setSelectedSchemaDb] = useState<DatabaseConnection | null>(null);
 
   useEffect(() => {
     loadConnections();
@@ -291,6 +303,10 @@ export default function DatabasesPage() {
 
   const handleChat = (dbId: string) => {
     router.push(`/chat?db=${dbId}`);
+  };
+
+  const handleExploreSchema = (conn: DatabaseConnection) => {
+    setSelectedSchemaDb(conn);
   };
 
   return (
@@ -335,7 +351,13 @@ export default function DatabasesPage() {
         ) : (
           <div className="space-y-4">
             {connections.map((conn) => (
-              <ConnectionCard key={conn.id} conn={conn} onDelete={handleDelete} onChat={handleChat} />
+              <ConnectionCard
+                key={conn.id}
+                conn={conn}
+                onDelete={handleDelete}
+                onChat={handleChat}
+                onExploreSchema={handleExploreSchema}
+              />
             ))}
           </div>
         )}
@@ -343,6 +365,18 @@ export default function DatabasesPage() {
 
       {showModal && (
         <AddConnectionModal onClose={() => setShowModal(false)} onAdded={handleAdded} />
+      )}
+
+      {selectedSchemaDb && (
+        <SchemaExplorerModal
+          databaseId={selectedSchemaDb.id}
+          databaseName={selectedSchemaDb.name}
+          isOpen={!!selectedSchemaDb}
+          onClose={() => setSelectedSchemaDb(null)}
+          onAskAboutTable={(tableName, prompt) => {
+            router.push(`/chat?db=${selectedSchemaDb.id}&q=${encodeURIComponent(prompt || `Explain the ${tableName} table`)}`);
+          }}
+        />
       )}
     </div>
   );

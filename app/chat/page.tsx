@@ -6,10 +6,12 @@ import {
   Database, MessageSquare, Plus, Settings, LogOut, Send, Loader2,
   ChevronDown, ChevronUp, BarChart3, AlertTriangle, Info, Zap, Code2, X
 } from "lucide-react";
-import { chatApi, databasesApi, authApi, isAuthenticated, getCurrentUserName } from "@/lib/api";
+import { chatApi, databasesApi, authApi, isAuthenticated, ensureAuthenticated, getCurrentUserName } from "@/lib/api";
 import type { ChatMessage, Conversation, DatabaseConnection, LoadingStage } from "@/lib/types";
 import DataVisualization from "@/components/charts/DataVisualization";
 import DataTable from "@/components/ui/DataTable";
+import MermaidDiagram from "@/components/ui/MermaidDiagram";
+import SchemaExplorerModal from "@/components/ui/SchemaExplorerModal";
 
 const STAGE_LABELS: Record<NonNullable<LoadingStage>, string> = {
   understanding: "Understanding question...",
@@ -71,9 +73,29 @@ function MessageBubble({ msg }: { msg: ChatMessage }) {
   }
 
   // Assistant message
-  const hasResult = msg.result && msg.result.rows.length > 0;
+  const hasResult = msg.result && msg.result.rows && msg.result.rows.length > 0;
+  const isErDiagram = msg.visualization?.type === "er_diagram" || Boolean(msg.visualization?.mermaid);
   const hasViz = msg.visualization?.required && msg.result?.rows && msg.result.rows.length > 0;
-  const showTable = hasResult && !hasViz;
+  const showTable = hasResult && !hasViz && !isErDiagram;
+
+  // Check if answer contains mermaid code
+  const mermaidMatch = msg.answer ? msg.answer.match(/```mermaid\s*([\s\S]*?)```/i) : null;
+  const rawMermaid = msg.visualization?.mermaid || (isErDiagram ? (msg.visualization?.value_key || "") : "") || (mermaidMatch ? mermaidMatch[1].trim() : "");
+  const cleanAnswer = mermaidMatch ? msg.answer.replace(/```mermaid\s*[\s\S]*?```/i, "").trim() : msg.answer;
+
+  const getIntentBadge = () => {
+    if (!msg.intent) return null;
+    switch (msg.intent) {
+      case "SCHEMA_EXPLORATION":
+        return <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-blue-950/40 border border-blue-800/40 text-blue-300">SCHEMA</span>;
+      case "WRITE_REQUEST":
+        return <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-red-950/40 border border-red-800/40 text-red-300">READ-ONLY ENFORCED</span>;
+      case "CASUAL_CHAT":
+        return <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-neutral-800 text-neutral-400">CHAT</span>;
+      default:
+        return null;
+    }
+  };
 
   return (
     <div className="flex justify-start mb-6 animate-fade-in">
@@ -86,6 +108,7 @@ function MessageBubble({ msg }: { msg: ChatMessage }) {
               <img src="/duck.png" alt="DataDuck Logo" className="w-4 h-4 object-contain" />
             </div>
             <span className="text-xs font-semibold" style={{ color: "#4A4A4A" }}>DATADUCK ANALYST</span>
+            {getIntentBadge()}
             {msg.result?.execution_time_ms && (
               <span className="text-xs ml-auto" style={{ color: "#2A2A2A" }}>
                 {msg.result.execution_time_ms.toFixed(0)}ms
@@ -93,7 +116,11 @@ function MessageBubble({ msg }: { msg: ChatMessage }) {
             )}
           </div>
 
-          <p className="text-sm leading-relaxed mb-3" style={{ color: "#C7C7C7" }}>{msg.answer}</p>
+          {cleanAnswer && (
+            <div className="text-sm leading-relaxed mb-3 whitespace-pre-wrap" style={{ color: "#C7C7C7" }}>
+              {cleanAnswer}
+            </div>
+          )}
 
           {/* Insights */}
           {msg.insights && msg.insights.length > 0 && (
@@ -121,8 +148,18 @@ function MessageBubble({ msg }: { msg: ChatMessage }) {
           <QueryBlock query={msg.query || { display: false, language: "sql", content: "" }} />
         </div>
 
+        {/* Visual ER Diagram */}
+        {rawMermaid && (
+          <div className="animate-scale-in">
+            <MermaidDiagram
+              chart={rawMermaid}
+              title={msg.visualization?.title || "Database Entity-Relationship Diagram"}
+            />
+          </div>
+        )}
+
         {/* Visualization */}
-        {hasViz && msg.visualization && msg.result && (
+        {hasViz && msg.visualization && msg.result && !isErDiagram && (
           <div className="animate-scale-in" style={{
             background: "rgba(255,255,255,0.015)",
             border: "1px solid rgba(255,255,255,0.06)",
@@ -141,7 +178,7 @@ function MessageBubble({ msg }: { msg: ChatMessage }) {
           </div>
         )}
 
-        {/* Table (when no viz) */}
+        {/* Table (when no viz and not ER diagram) */}
         {showTable && msg.result && (
           <div className="animate-scale-in" style={{
             background: "rgba(255,255,255,0.015)",
@@ -178,18 +215,23 @@ function ChatContent() {
   const [loading, setLoading] = useState(false);
   const [stage, setStage] = useState<LoadingStage>(null);
   const [loadingHistory, setLoadingHistory] = useState(false);
+  const [isSchemaModalOpen, setIsSchemaModalOpen] = useState(false);
   const [userName, setUserName] = useState("there");
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
-    if (!isAuthenticated()) {
-      router.push("/login");
-      return;
-    }
-    setUserName(getCurrentUserName().split(" ")[0] || "there");
-    loadSidebarData();
+    const initAuth = async () => {
+      const isAuth = await ensureAuthenticated();
+      if (!isAuth) {
+        router.push("/login");
+        return;
+      }
+      setUserName(getCurrentUserName().split(" ")[0] || "there");
+      loadSidebarData();
+    };
+    initAuth();
   }, []);
 
   useEffect(() => {
@@ -462,9 +504,19 @@ function ChatContent() {
             )}
           </div>
           {selectedDb && (
-            <div className="flex items-center gap-1.5 text-xs" style={{ color: "#22C55E" }}>
-              <div className="w-1.5 h-1.5 rounded-full bg-green-400" />
-              Read-Only
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setIsSchemaModalOpen(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs text-neutral-300 hover:text-white border border-neutral-800 hover:border-neutral-700 bg-neutral-900/60 hover:bg-neutral-800/80 transition-smooth shadow-sm"
+                title="Open interactive Schema Explorer and ER diagram"
+              >
+                <Database size={13} className="text-emerald-400" />
+                <span>Schema Explorer</span>
+              </button>
+              <div className="flex items-center gap-1.5 text-xs text-emerald-400 bg-emerald-950/30 border border-emerald-800/40 px-2.5 py-1 rounded-full">
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                Read-Only
+              </div>
             </div>
           )}
         </div>
@@ -485,33 +537,35 @@ function ChatContent() {
               <h2 className="text-xl font-bold mb-2 text-gradient-silver">Ask anything about your data</h2>
               <p className="text-sm mb-8" style={{ color: "#6B6B6B" }}>
                 Connected to <strong style={{ color: "#AFAFAF" }}>{selectedDb.name}</strong>.
-                Ask questions in plain English — no SQL required.
+                Ask questions in plain English — query data, explore schemas, and generate ER diagrams.
               </p>
-              <div className="grid grid-cols-1 gap-2 text-left">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-left">
                 {[
+                  "Explain my database schema",
+                  "Show database ER diagram",
+                  "What tables are in my database?",
+                  "Show table relationships",
                   "What are the top 10 customers by revenue?",
-                  "Show monthly sales trends for this year.",
                   "Are there any NULL values in my data?",
-                  "Which tables have the most records?",
-                  "Find duplicate email addresses.",
-                  "Give me an overview of my database.",
                 ].map((q, i) => (
                   <button key={i} onClick={() => handleSend(q)}
-                    className="text-sm px-4 py-3 rounded-xl text-left transition-smooth"
+                    className="text-xs sm:text-sm px-4 py-3 rounded-xl text-left transition-smooth"
                     style={{
                       background: "rgba(255,255,255,0.02)",
                       border: "1px solid rgba(255,255,255,0.06)",
-                      color: "#6B6B6B",
+                      color: "#8A8A8A",
                     }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.background = "rgba(255,255,255,0.05)";
-                      e.currentTarget.style.color = "#AFAFAF";
+                      e.currentTarget.style.color = "#E5E7EB";
+                      e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)";
                     }}
                     onMouseLeave={(e) => {
                       e.currentTarget.style.background = "rgba(255,255,255,0.02)";
-                      e.currentTarget.style.color = "#6B6B6B";
+                      e.currentTarget.style.color = "#8A8A8A";
+                      e.currentTarget.style.borderColor = "rgba(255,255,255,0.06)";
                     }}>
-                    "{q}"
+                    &quot;{q}&quot;
                   </button>
                 ))}
               </div>
@@ -550,7 +604,7 @@ function ChatContent() {
                     e.target.style.height = Math.min(e.target.scrollHeight, 200) + "px";
                   }}
                   onKeyDown={handleKeyDown}
-                  placeholder="Ask anything about your database..."
+                  placeholder="Ask anything about your database, schema, or tables..."
                   disabled={loading}
                   className="w-full bg-transparent resize-none outline-none py-4 pl-5 pr-16 text-sm"
                   style={{
@@ -576,6 +630,19 @@ function ChatContent() {
           </div>
         )}
       </div>
+
+      {/* Schema Explorer Modal */}
+      {selectedDb && (
+        <SchemaExplorerModal
+          databaseId={selectedDb.id}
+          databaseName={selectedDb.name}
+          isOpen={isSchemaModalOpen}
+          onClose={() => setIsSchemaModalOpen(false)}
+          onAskAboutTable={(tableName, prompt) => {
+            handleSend(prompt || `Explain the ${tableName} table`);
+          }}
+        />
+      )}
     </div>
   );
 }

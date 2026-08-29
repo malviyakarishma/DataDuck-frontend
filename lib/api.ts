@@ -4,7 +4,7 @@
 import axios, { AxiosError, AxiosRequestConfig } from 'axios';
 import type {
   TokenResponse, OTPResponse, LoginResponse, User, DatabaseConnection, TestConnectionResponse,
-  ChatResponse, ChatMessage, Conversation, SchemaOverview, ApiError
+  ChatResponse, ChatMessage, Conversation, SchemaOverview, FullSchemaResponse, ApiError
 } from './types';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
@@ -17,6 +17,18 @@ const apiClient = axios.create({
   },
 });
 
+let isRefreshing = false;
+let refreshSubscribers: Array<(error?: unknown) => void> = [];
+
+function onRefreshed(error?: unknown) {
+  refreshSubscribers.forEach((cb) => cb(error));
+  refreshSubscribers = [];
+}
+
+function addRefreshSubscriber(cb: (error?: unknown) => void) {
+  refreshSubscribers.push(cb);
+}
+
 // Response interceptor — handle access token expiry & refresh token expiry via HttpOnly cookies
 apiClient.interceptors.response.use(
   (response) => response,
@@ -24,7 +36,7 @@ apiClient.interceptors.response.use(
     const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
     const requestUrl = originalRequest.url || '';
 
-    // Do not redirect on auth submission requests (login, register, verify-otp, resend-otp)
+    // Do not intercept on auth submission requests (login, register, verify-otp, resend-otp)
     const isAuthSubmission = requestUrl.includes('/auth/login') ||
                              requestUrl.includes('/auth/register') ||
                              requestUrl.includes('/auth/verify-otp') ||
@@ -38,19 +50,46 @@ apiClient.interceptors.response.use(
       // 1. Access token expired — attempt cookie refresh once
       if (!originalRequest._retry) {
         originalRequest._retry = true;
+
+        if (isRefreshing) {
+          return new Promise((resolve, reject) => {
+            addRefreshSubscriber((refreshError) => {
+              if (refreshError) {
+                reject(refreshError);
+              } else {
+                resolve(apiClient(originalRequest));
+              }
+            });
+          });
+        }
+
+        isRefreshing = true;
+
         try {
           // Send request with credentials so refresh_token cookie is attached
-          await axios.post(`${API_BASE_URL}/auth/refresh`, {}, { withCredentials: true });
+          const refreshRes = await axios.post(`${API_BASE_URL}/auth/refresh`, {}, { withCredentials: true });
+          if (refreshRes.data) {
+            _storeTokens(refreshRes.data);
+          }
+          isRefreshing = false;
+          onRefreshed();
           // Retry original request (browser will now send the newly refreshed access_token cookie)
           return apiClient(originalRequest);
-        } catch {
+        } catch (refreshErr) {
+          isRefreshing = false;
+          onRefreshed(refreshErr);
           // Token refresh failed (Refresh token expired or invalid)
+          _clearTokens();
+          if (typeof window !== 'undefined' && window.location.pathname !== '/login' && window.location.pathname !== '/signup') {
+            window.location.href = '/login';
+          }
+          return Promise.reject(refreshErr);
         }
       }
 
-      // 2. Refresh token expired or missing -> clear local state & redirect to login
+      // 2. Already retried -> clear local state & redirect to login
       _clearTokens();
-      if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+      if (typeof window !== 'undefined' && window.location.pathname !== '/login' && window.location.pathname !== '/signup') {
         window.location.href = '/login';
       }
     }
@@ -101,6 +140,23 @@ export const authApi = {
 
   getMe: async (): Promise<User> => {
     const res = await apiClient.get('/auth/me');
+    if (res.data) {
+      _storeTokens({
+        user_id: res.data.id,
+        email: res.data.email,
+        full_name: res.data.full_name,
+        access_token: '',
+        token_type: 'bearer',
+      });
+    }
+    return res.data;
+  },
+
+  refresh: async (): Promise<TokenResponse> => {
+    const res = await axios.post(`${API_BASE_URL}/auth/refresh`, {}, { withCredentials: true });
+    if (res.data) {
+      _storeTokens(res.data);
+    }
     return res.data;
   },
 };
@@ -139,6 +195,11 @@ export const databasesApi = {
 
   getSchemaOverview: async (id: string): Promise<SchemaOverview> => {
     const res = await apiClient.get(`/databases/${id}/overview`);
+    return res.data;
+  },
+
+  getFullSchema: async (id: string): Promise<FullSchemaResponse> => {
+    const res = await apiClient.get(`/databases/${id}/schema`);
     return res.data;
   },
 };
@@ -213,9 +274,21 @@ export function isAuthenticated(): boolean {
   return !!(localStorage.getItem('user_email') || localStorage.getItem('user_id'));
 }
 
+export async function ensureAuthenticated(): Promise<boolean> {
+  if (typeof window === 'undefined') return false;
+  if (isAuthenticated()) return true;
+  try {
+    const user = await authApi.getMe();
+    return !!(user && user.id);
+  } catch {
+    return false;
+  }
+}
+
 export function getCurrentUserName(): string {
   if (typeof window === 'undefined') return '';
   return localStorage.getItem('user_name') || '';
 }
 
 export default apiClient;
+

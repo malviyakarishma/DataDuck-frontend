@@ -6,7 +6,7 @@ import {
   Database, MessageSquare, Plus, Settings, LogOut, ChevronRight,
   Server, BarChart3, Loader2, Clock
 } from "lucide-react";
-import { authApi, databasesApi, chatApi, getApiErrorMessage, getCurrentUserName, isAuthenticated } from "@/lib/api";
+import { authApi, databasesApi, chatApi, getApiErrorMessage, getCurrentUserName, isAuthenticated, ensureAuthenticated } from "@/lib/api";
 import type { DatabaseConnection, Conversation } from "@/lib/types";
 
 const SUGGESTED_QUESTIONS = [
@@ -26,12 +26,16 @@ export default function DashboardPage() {
   const [userName, setUserName] = useState("there");
 
   useEffect(() => {
-    if (!isAuthenticated()) {
-      router.push("/login");
-      return;
-    }
-    setUserName(getCurrentUserName() || "there");
-    loadData();
+    const initAuth = async () => {
+      const isAuth = await ensureAuthenticated();
+      if (!isAuth) {
+        router.push("/login");
+        return;
+      }
+      setUserName(getCurrentUserName() || "there");
+      loadData();
+    };
+    initAuth();
   }, []);
 
   const loadData = async () => {

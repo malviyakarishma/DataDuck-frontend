@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Database, ArrowLeft, User, Lock, Trash2 } from "lucide-react";
-import { authApi, isAuthenticated, getCurrentUserName } from "@/lib/api";
+import { authApi, isAuthenticated, ensureAuthenticated, getCurrentUserName } from "@/lib/api";
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -11,14 +11,18 @@ export default function SettingsPage() {
   const [email, setEmail] = useState("");
 
   useEffect(() => {
-    if (!isAuthenticated()) {
-      router.push("/login");
-      return;
-    }
-    setUserName(getCurrentUserName());
-    if (typeof window !== "undefined") {
-      setEmail(localStorage.getItem("user_email") || "");
-    }
+    const initAuth = async () => {
+      const isAuth = await ensureAuthenticated();
+      if (!isAuth) {
+        router.push("/login");
+        return;
+      }
+      setUserName(getCurrentUserName());
+      if (typeof window !== "undefined") {
+        setEmail(localStorage.getItem("user_email") || "");
+      }
+    };
+    initAuth();
   }, []);
 
   const handleLogout = async () => {

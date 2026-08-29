@@ -58,7 +58,7 @@ export interface TestConnectionResponse {
 
 export interface VisualizationSpec {
   required: boolean;
-  type?: 'bar' | 'line' | 'area' | 'pie' | 'donut' | 'scatter' | 'table' | 'kpi';
+  type?: 'bar' | 'line' | 'area' | 'pie' | 'donut' | 'scatter' | 'table' | 'kpi' | 'er_diagram';
   title?: string;
   description?: string;
   x_key?: string;
@@ -66,6 +66,7 @@ export interface VisualizationSpec {
   value_key?: string;
   label_key?: string;
   format?: 'currency' | 'percentage' | 'number' | null;
+  mermaid?: string;
 }
 
 export interface QueryInfo {
@@ -88,6 +89,7 @@ export interface ChatMessage {
   answer: string;
   insights: string[];
   warnings: string[];
+  intent?: 'DATA_QUERY' | 'SCHEMA_EXPLORATION' | 'CASUAL_CHAT' | 'WRITE_REQUEST' | string;
   query?: QueryInfo;
   result?: QueryResultData;
   visualization?: VisualizationSpec;
@@ -108,6 +110,43 @@ export interface Conversation {
   message_count: number;
   created_at: string;
   updated_at: string;
+}
+
+export interface ColumnDetail {
+  name: string;
+  data_type: string;
+  is_nullable: boolean;
+  is_primary_key: boolean;
+  is_foreign_key: boolean;
+  default_value?: string | null;
+  max_length?: number | null;
+  references_table?: string | null;
+  references_column?: string | null;
+}
+
+export interface TableDetail {
+  name: string;
+  schema?: string | null;
+  row_count?: number | null;
+  columns: ColumnDetail[];
+  primary_keys?: string[];
+  foreign_keys?: {
+    column: string;
+    references_table?: string;
+    references_column?: string;
+  }[];
+}
+
+export interface FullSchemaResponse {
+  database_id: string;
+  db_type: string;
+  database_name: string;
+  total_tables: number;
+  total_relationships: number;
+  tables: TableDetail[];
+  relationships: RelationshipInfo[];
+  mermaid_er_diagram: string;
+  analyzed_at?: string | null;
 }
 
 export interface SchemaOverview {
@@ -133,7 +172,9 @@ export interface RelationshipInfo {
   from_column: string;
   to_table: string;
   to_column: string;
+  constraint_name?: string;
 }
+
 
 export interface ApiError {
   error: string;
