@@ -48,7 +48,7 @@ function Navbar({ loggedIn }: { loggedIn: boolean }) {
             </>
           ) : (
             ["Features", "How It Works", "Security"].map((item) => (
-              <a key={item} href={`#${item.toLowerCase().replace(" ", "-")}`}
+              <a key={item} href={`#${item.toLowerCase().replaceAll(" ", "-")}`}
                 className="text-sm transition-smooth"
                 style={{ color: "#8A8A8A" }}
                 onMouseEnter={(e) => (e.currentTarget.style.color = "#C7C7C7")}
@@ -79,32 +79,48 @@ function Navbar({ loggedIn }: { loggedIn: boolean }) {
 function Hero({ loggedIn }: { loggedIn: boolean }) {
   return (
     <section className="hero-bg min-h-screen flex items-center justify-center relative overflow-hidden">
+      {/* Background Video */}
+      <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none z-0">
+        <video
+          src="/videos/Video.mp4"
+          autoPlay
+          loop
+          muted
+          playsInline
+          preload="auto"
+          className="w-full h-full object-cover scale-105 filter brightness-[0.45] contrast-[1.1] saturate-[1.2]"
+        />
+        {/* Subtle Dark Overlays for Readability & Depth */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#050505]/80 via-[#050505]/40 to-[#050505]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_transparent_0%,_#050505_80%)] opacity-80" />
+      </div>
+
       {/* Background grid */}
-      <div className="absolute inset-0 opacity-5"
+      <div className="absolute inset-0 opacity-10 pointer-events-none z-0"
         style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.4) 1px, transparent 1px)", backgroundSize: "60px 60px" }} />
 
       {/* Radial glows */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full opacity-20"
-        style={{ background: "radial-gradient(circle, rgba(180,180,180,0.1) 0%, transparent 70%)", filter: "blur(40px)" }} />
+      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[550px] h-[550px] rounded-full opacity-25 pointer-events-none z-0"
+        style={{ background: "radial-gradient(circle, rgba(99,102,241,0.2) 0%, rgba(6,182,212,0.1) 40%, transparent 70%)", filter: "blur(60px)" }} />
 
-      <div className="max-w-5xl mx-auto px-6 text-center relative z-10">
+      <div className="max-w-5xl mx-auto px-6 text-center relative z-10 -mt-6">
         {/* Badge */}
-        <div className="inline-flex items-center gap-2 mb-8 badge badge-info animate-fade-in">
+        <div className="inline-flex items-center gap-2 mb-8 badge badge-info animate-fade-in backdrop-blur-md bg-black/40 border-white/10">
           <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
           <span>Now supports PostgreSQL · MySQL · SQLite · MongoDB</span>
         </div>
 
         {/* Main headline */}
-        <h1 className="text-5xl md:text-7xl font-bold leading-tight mb-6 animate-fade-in"
+        <h1 className="text-5xl md:text-7xl font-bold leading-tight mb-6 animate-fade-in drop-shadow-2xl"
           style={{ animationDelay: "0.1s" }}>
           <span className="text-gradient-silver block">Your Data Has Answers.</span>
-          <span className="text-gradient-silver block mt-2 font-extrabold text-4xl md:text-6xl text-gray-300">
+          <span className="text-gradient-silver block mt-2 font-extrabold text-4xl md:text-6xl text-gray-200">
             DataDuck Digs Them Out.
           </span>
         </h1>
 
-        <p className="text-lg md:text-xl max-w-2xl mx-auto mb-10 animate-fade-in"
-          style={{ color: "#8A8A8A", animationDelay: "0.2s" }}>
+        <p className="text-lg md:text-xl max-w-2xl mx-auto mb-10 animate-fade-in text-neutral-300 font-normal drop-shadow"
+          style={{ animationDelay: "0.2s" }}>
           Connect your database, ask questions in plain English, uncover insights,
           identify data-quality problems, and generate visualizations — without
           manually writing a single query.
@@ -115,82 +131,27 @@ function Hero({ loggedIn }: { loggedIn: boolean }) {
           style={{ animationDelay: "0.3s" }}>
           {loggedIn ? (
             <>
-              <Link href="/dashboard" className="btn-primary flex items-center gap-2 justify-center text-base py-4 px-8">
+              <Link href="/dashboard" className="btn-primary flex items-center gap-2 justify-center text-base py-4 px-8 shadow-2xl shadow-indigo-950/50">
                 Go to Dashboard
                 <ArrowRight size={18} />
               </Link>
-              <Link href="/chat" className="btn-ghost flex items-center gap-2 justify-center text-base py-4 px-8">
+              <Link href="/chat" className="btn-ghost backdrop-blur-md bg-black/30 border-white/10 flex items-center gap-2 justify-center text-base py-4 px-8">
                 Open Chat
                 <MessageSquare size={18} />
               </Link>
             </>
           ) : (
             <>
-              <Link href="/signup" className="btn-primary flex items-center gap-2 justify-center text-base py-4 px-8">
+              <Link href="/signup" className="btn-primary flex items-center gap-2 justify-center text-base py-4 px-8 shadow-2xl shadow-indigo-950/50">
                 Connect Your Database
                 <ArrowRight size={18} />
               </Link>
-              <a href="#how-it-works" className="btn-ghost flex items-center gap-2 justify-center text-base py-4 px-8">
+              <a href="#how-it-works" className="btn-ghost backdrop-blur-md bg-black/30 border-white/10 flex items-center gap-2 justify-center text-base py-4 px-8">
                 See How It Works
                 <ChevronDown size={18} />
               </a>
             </>
           )}
-        </div>
-
-        {/* Visual DB → AI graphic */}
-        <div className="mt-20 animate-fade-in" style={{ animationDelay: "0.5s" }}>
-          <div className="card-luxury p-8 max-w-3xl mx-auto">
-            <div className="flex items-center justify-between gap-4 mb-6">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                  style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)" }}>
-                  <img src="/duck.png" alt="DataDuck" className="w-5 h-5 object-contain" />
-                </div>
-                <div>
-                  <span className="text-xs font-semibold" style={{ color: "#6B6B6B" }}>DATADUCK ANALYST</span>
-                  <div className="text-xs" style={{ color: "#6B6B6B" }}>PostgreSQL · Connected</div>
-                </div>
-              </div>
-
-              <div className="flex-1 flex items-center justify-center">
-                <div className="flex items-center gap-1">
-                  {[...Array(6)].map((_, i) => (
-                    <div key={i} className="w-1 rounded-full"
-                      style={{
-                        height: `${8 + (i % 3) * 6}px`,
-                        background: `rgba(200,200,200,${0.15 + i * 0.05})`,
-                        animation: `dot-bounce ${1 + i * 0.15}s ease-in-out infinite`,
-                      }} />
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <div className="text-right">
-                  <div className="text-sm font-semibold" style={{ color: "#C7C7C7" }}>DataDuck AI</div>
-                  <div className="text-xs" style={{ color: "#6B6B6B" }}>Powered by Gemini</div>
-                </div>
-                <div className="w-10 h-10 rounded-lg flex items-center justify-center overflow-hidden"
-                  style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)" }}>
-                  <img src="/duck.png" alt="DataDuck Logo" className="w-7 h-7 object-contain" />
-                </div>
-              </div>
-            </div>
-
-            <div className="p-4 rounded-xl text-left" style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.06)" }}>
-              <div className="text-xs mb-1" style={{ color: "#6B6B6B" }}>USER</div>
-              <p className="text-sm" style={{ color: "#C7C7C7" }}>"Who are my top 5 customers by total revenue?"</p>
-            </div>
-
-            <div className="mt-3 p-4 rounded-xl text-left" style={{ background: "rgba(255,255,255,0.015)", border: "1px solid rgba(255,255,255,0.06)" }}>
-              <div className="text-xs mb-1" style={{ color: "#6B6B6B" }}>DATADUCK</div>
-              <p className="text-sm" style={{ color: "#AFAFAF" }}>
-                "Acme Corp leads with $428,500 in total purchases, followed by TechStar at $312,000.
-                Together your top 5 customers account for 61% of total revenue."
-              </p>
-            </div>
-          </div>
         </div>
       </div>
     </section>

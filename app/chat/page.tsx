@@ -7,7 +7,7 @@ import {
   ChevronDown, ChevronUp, BarChart3, AlertTriangle, Info, Zap, Code2, X, Trash2, Check
 } from "lucide-react";
 import { chatApi, databasesApi, authApi, isAuthenticated, ensureAuthenticated, getCurrentUserName } from "@/lib/api";
-import type { ChatMessage, Conversation, DatabaseConnection, LoadingStage } from "@/lib/types";
+import { type ChatMessage, type Conversation, type DatabaseConnection, type LoadingStage, getConnectionBadge } from "@/lib/types";
 import DataVisualization from "@/components/charts/DataVisualization";
 import DataTable from "@/components/ui/DataTable";
 import MermaidDiagram from "@/components/ui/MermaidDiagram";
@@ -578,7 +578,7 @@ function ChatContent() {
               <>
                 <div className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold"
                   style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "#8A8A8A" }}>
-                  {selectedDb.db_type.slice(0, 2).toUpperCase()}
+                  {getConnectionBadge(selectedDb.name)}
                 </div>
                 <div>
                   <p className="text-sm font-semibold" style={{ color: "#E5E7EB" }}>{selectedDb.name}</p>

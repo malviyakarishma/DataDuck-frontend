@@ -7,7 +7,8 @@ import {
   Server, BarChart3, Loader2, Clock, Trash2
 } from "lucide-react";
 import { authApi, databasesApi, chatApi, getApiErrorMessage, getCurrentUserName, isAuthenticated, ensureAuthenticated } from "@/lib/api";
-import type { DatabaseConnection, Conversation } from "@/lib/types";
+import { type DatabaseConnection, type Conversation, getConnectionBadge } from "@/lib/types";
+import AddConnectionModal from "@/components/ui/AddConnectionModal";
 
 const SUGGESTED_QUESTIONS = [
   "Analyze my database and give me an overview.",
@@ -23,6 +24,7 @@ export default function DashboardPage() {
   const [databases, setDatabases] = useState<DatabaseConnection[]>([]);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showAddModal, setShowAddModal] = useState(false);
   const [userName, setUserName] = useState("there");
 
   useEffect(() => {
@@ -192,9 +194,12 @@ export default function DashboardPage() {
                   <p className="text-sm mb-6" style={{ color: "#6B6B6B" }}>
                     Connect your first database to start asking questions.
                   </p>
-                  <Link href="/databases" className="btn-primary inline-flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowAddModal(true)}
+                    className="btn-primary inline-flex items-center gap-2">
                     <Plus size={18} /> Connect Database
-                  </Link>
+                  </button>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
@@ -205,7 +210,7 @@ export default function DashboardPage() {
                         <div className="flex items-center gap-3">
                           <div className="w-9 h-9 rounded-lg flex items-center justify-center text-xs font-bold"
                             style={{ background: "rgba(255,255,255,0.05)", color: "#C7C7C7" }}>
-                            {db.db_type.slice(0, 2).toUpperCase()}
+                            {getConnectionBadge(db.name)}
                           </div>
                           <div>
                             <p className="text-sm font-semibold" style={{ color: "#E5E7EB" }}>{db.name}</p>
@@ -229,12 +234,14 @@ export default function DashboardPage() {
                     </div>
                   ))}
                   {databases.length < 4 && (
-                    <Link href="/databases"
-                      className="card-glass p-5 flex items-center justify-center gap-2 animate-fade-in"
-                      style={{ border: "1px dashed rgba(255,255,255,0.08)" }}>
-                      <Plus size={16} style={{ color: "#4A4A4A" }} />
-                      <span className="text-sm" style={{ color: "#4A4A4A" }}>Add Database</span>
-                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => setShowAddModal(true)}
+                      className="card-glass p-5 flex items-center justify-center gap-2 animate-fade-in transition-smooth hover:border-white/20 group cursor-pointer text-left w-full"
+                      style={{ border: "1px dashed rgba(255,255,255,0.12)" }}>
+                      <Plus size={16} className="text-neutral-400 group-hover:text-white transition-smooth" />
+                      <span className="text-sm text-neutral-400 group-hover:text-white transition-smooth">Add Database</span>
+                    </button>
                   )}
                 </div>
               )}
@@ -247,27 +254,17 @@ export default function DashboardPage() {
                   </h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {SUGGESTED_QUESTIONS.map((q, i) => (
-                      <button key={i}
-                        onClick={() => handleStartChat(firstDb!.id, q)}
-                        className="text-left p-4 rounded-xl transition-smooth text-sm animate-fade-in"
+                      <div
+                        key={i}
+                        className="p-4 rounded-xl text-sm animate-fade-in select-text"
                         style={{
                           background: "rgba(255,255,255,0.02)",
                           border: "1px solid rgba(255,255,255,0.06)",
-                          color: "#6B6B6B",
+                          color: "#8A8A8A",
                           animationDelay: `${i * 0.05}s`,
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.background = "rgba(255,255,255,0.05)";
-                          e.currentTarget.style.color = "#AFAFAF";
-                          e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)";
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.background = "rgba(255,255,255,0.02)";
-                          e.currentTarget.style.color = "#6B6B6B";
-                          e.currentTarget.style.borderColor = "rgba(255,255,255,0.06)";
                         }}>
                         "{q}"
-                      </button>
+                      </div>
                     ))}
                   </div>
                 </div>
@@ -316,6 +313,16 @@ export default function DashboardPage() {
           )}
         </div>
       </div>
+
+      {showAddModal && (
+        <AddConnectionModal
+          onClose={() => setShowAddModal(false)}
+          onAdded={(conn) => {
+            setDatabases((prev) => [conn, ...prev]);
+            setShowAddModal(false);
+          }}
+        />
+      )}
     </div>
   );
 }

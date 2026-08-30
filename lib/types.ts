@@ -56,6 +56,15 @@ export interface TestConnectionResponse {
   database_name?: string;
 }
 
+export function getConnectionBadge(name?: string): string {
+  if (!name || !name.trim()) return "DB";
+  const words = name.trim().split(/[\s_\-]+/).filter(Boolean);
+  if (words.length >= 2) {
+    return (words[0][0] + words[1][0]).toUpperCase();
+  }
+  return name.trim().slice(0, 2).toUpperCase();
+}
+
 export interface VisualizationSpec {
   required: boolean;
   type?: 'bar' | 'line' | 'area' | 'pie' | 'donut' | 'scatter' | 'table' | 'kpi' | 'er_diagram';

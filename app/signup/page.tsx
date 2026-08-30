@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Database, Eye, EyeOff, ArrowRight, Loader2, Check, ShieldCheck, Mail, RefreshCw, ArrowLeft } from "lucide-react";
-import { authApi, getApiErrorMessage } from "@/lib/api";
+import { authApi, getApiErrorMessage, isAuthenticated } from "@/lib/api";
 
 export default function SignupPage() {
   const router = useRouter();
