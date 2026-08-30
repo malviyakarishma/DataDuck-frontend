@@ -12,6 +12,7 @@ import DataVisualization from "@/components/charts/DataVisualization";
 import DataTable from "@/components/ui/DataTable";
 import MermaidDiagram from "@/components/ui/MermaidDiagram";
 import SchemaExplorerModal from "@/components/ui/SchemaExplorerModal";
+import { playQuackSound } from "@/lib/sound";
 
 const STAGE_LABELS: Record<NonNullable<LoadingStage>, string> = {
   understanding: "Understanding question...",
@@ -441,7 +442,7 @@ function ChatContent() {
     <div className="h-screen w-screen overflow-hidden flex" style={{ background: "var(--bg-void)" }}>
       {/* Sidebar */}
       <div className="sidebar w-64 h-full flex flex-col p-4 flex-shrink-0">
-        <Link href="/dashboard" className="flex items-center gap-2 px-2 py-3 mb-4 group">
+        <Link href="/dashboard" onMouseEnter={playQuackSound} className="flex items-center gap-2 px-2 py-3 mb-4 group cursor-pointer">
           <img src="/duck.png" alt="DataDuck Logo" className="w-10 h-10 object-contain transition-transform group-hover:scale-105" />
           <div className="flex flex-col justify-center">
             <span className="font-bold text-lg text-gradient-silver leading-none">DataDuck</span>

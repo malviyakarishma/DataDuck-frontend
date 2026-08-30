@@ -9,6 +9,7 @@ import {
 import { authApi, databasesApi, chatApi, getApiErrorMessage, getCurrentUserName, isAuthenticated, ensureAuthenticated } from "@/lib/api";
 import { type DatabaseConnection, type Conversation, getConnectionBadge } from "@/lib/types";
 import AddConnectionModal from "@/components/ui/AddConnectionModal";
+import { playQuackSound } from "@/lib/sound";
 
 const SUGGESTED_QUESTIONS = [
   "Analyze my database and give me an overview.",
@@ -74,7 +75,7 @@ export default function DashboardPage() {
       {/* Sidebar */}
       <div className="sidebar w-64 flex flex-col p-4 flex-shrink-0">
         {/* Logo */}
-        <Link href="/dashboard" className="flex items-center gap-2 px-2 py-3 mb-6 group">
+        <Link href="/dashboard" onMouseEnter={playQuackSound} className="flex items-center gap-2 px-2 py-3 mb-6 group cursor-pointer">
           <img src="/duck.png" alt="DataDuck Logo" className="w-10 h-10 object-contain transition-transform group-hover:scale-105" />
           <div className="flex flex-col justify-center">
             <span className="font-bold text-lg text-gradient-silver leading-none">DataDuck</span>

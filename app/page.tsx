@@ -6,6 +6,7 @@ import {
   BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
 import { isAuthenticated } from "@/lib/api";
+import { playQuackSound } from "@/lib/sound";
 
 // ── Mock chart data for product preview ──
 const mockRevenueData = [
@@ -30,7 +31,7 @@ function Navbar({ loggedIn }: { loggedIn: boolean }) {
     <nav className={`navbar transition-smooth ${scrolled ? "shadow-2xl" : ""}`}>
       <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
         {/* Logo */}
-        <Link href={loggedIn ? "/dashboard" : "/"} className="flex items-center gap-2 group">
+        <Link href={loggedIn ? "/dashboard" : "/"} onMouseEnter={playQuackSound} className="flex items-center gap-2 group cursor-pointer">
           <img src="/duck.png" alt="DataDuck Logo" className="w-11 h-11 object-contain transition-transform group-hover:scale-105" />
           <div className="flex flex-col justify-center">
             <span className="font-bold text-xl tracking-tight text-gradient-silver leading-none">DataDuck</span>
@@ -194,12 +195,13 @@ function ProductPreview() {
         <div className="flex gap-3 justify-center mb-8">
           {demos.map((d, i) => (
             <button key={i} onClick={() => setActiveDemo(i)}
-              className="text-sm py-2 px-4 rounded-full transition-smooth"
+              className="text-sm py-2 px-4 rounded-full transition-smooth cursor-pointer hover:text-white hover:border-white/20"
               style={{
                 background: activeDemo === i ? "rgba(255,255,255,0.1)" : "transparent",
                 border: "1px solid",
                 borderColor: activeDemo === i ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.08)",
                 color: activeDemo === i ? "#C7C7C7" : "#6B6B6B",
+                cursor: "pointer",
               }}>
               Demo {i + 1}
             </button>
@@ -470,8 +472,8 @@ function Footer({ loggedIn }: { loggedIn: boolean }) {
     <footer style={{ background: "var(--bg-base)", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
       <div className="max-w-7xl mx-auto px-6 py-12">
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-2">
-            <img src="/duck.png" alt="DataDuck Logo" className="w-9 h-9 object-contain" />
+          <div onMouseEnter={playQuackSound} className="flex items-center gap-2 cursor-pointer group">
+            <img src="/duck.png" alt="DataDuck Logo" className="w-9 h-9 object-contain transition-transform group-hover:scale-105" />
             <div className="flex flex-col justify-center">
               <span className="font-bold text-lg text-gradient-silver leading-none">DataDuck</span>
               <span className="text-[10px] tracking-wider uppercase font-medium text-gray-500 mt-0.5">Ask. Dig. Discover.</span>
