@@ -5,12 +5,13 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
 } from "recharts";
 import type { VisualizationSpec } from "@/lib/types";
+import { useTheme } from "@/components/ThemeProvider";
 
-// Curated modern color palette tailored for dark theme: colorful, distinct, elegant
-const CHART_COLORS = [
+// Curated modern color palettes
+const DARK_CHART_COLORS = [
+  "#10B981", // Emerald
   "#6366F1", // Indigo / Iris
   "#06B6D4", // Cyan / Teal
-  "#10B981", // Emerald
   "#F59E0B", // Amber / Warm Gold
   "#EC4899", // Rose / Pink
   "#8B5CF6", // Purple / Violet
@@ -20,6 +21,21 @@ const CHART_COLORS = [
   "#A855F7", // Bright Violet
   "#84CC16", // Lime
   "#E11D48", // Crimson
+];
+
+const LIGHT_CHART_COLORS = [
+  "#087F5B", // Deep Emerald
+  "#2563EB", // Royal Blue
+  "#0891B2", // Cyan
+  "#D97706", // Warm Amber
+  "#7C3AED", // Vivid Purple
+  "#E11D48", // Rose Red
+  "#059669", // Mint Green
+  "#EA580C", // Vibrant Orange
+  "#4F46E5", // Indigo
+  "#0D9488", // Deep Teal
+  "#65A30D", // Lime Green
+  "#DB2777", // Pink
 ];
 
 interface DataVisualizationProps {
@@ -45,37 +61,60 @@ function formatValue(value: unknown, format?: string | null): string {
   }
 }
 
-function KPICard({ spec, data }: { spec: VisualizationSpec; data: Record<string, unknown>[] }) {
+function KPICard({ spec, data, isDark }: { spec: VisualizationSpec; data: Record<string, unknown>[]; isDark: boolean }) {
   const value = data[0]?.[spec.value_key || spec.y_keys?.[0] || Object.keys(data[0] || {})[0]];
   return (
-    <div className="kpi-card max-w-sm mx-auto p-5 rounded-xl border"
+    <div className="kpi-card max-w-sm mx-auto p-5 rounded-xl border transition-all duration-200"
       style={{
-        background: "linear-gradient(145deg, rgba(99, 102, 241, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%)",
-        borderColor: "rgba(99, 102, 241, 0.2)",
+        background: isDark
+          ? "linear-gradient(145deg, rgba(16, 185, 129, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%)"
+          : "linear-gradient(145deg, rgba(8, 127, 91, 0.06) 0%, rgba(255, 255, 255, 0.9) 100%)",
+        borderColor: isDark ? "rgba(16, 185, 129, 0.2)" : "rgba(8, 127, 91, 0.2)",
+        boxShadow: isDark ? "none" : "0 4px 16px -2px rgba(8, 127, 91, 0.08)",
       }}>
-      {spec.title && <p className="text-xs uppercase tracking-wider font-medium mb-1.5" style={{ color: "#94A3B8" }}>{spec.title}</p>}
-      <div className="text-3xl font-bold tracking-tight" style={{ color: "#F8FAFC" }}>{formatValue(value, spec.format)}</div>
-      {spec.description && <p className="text-xs mt-2" style={{ color: "#64748B" }}>{spec.description}</p>}
+      {spec.title && (
+        <p className="text-xs uppercase tracking-wider font-semibold mb-1.5" style={{ color: isDark ? "#94A3B8" : "#667085" }}>
+          {spec.title}
+        </p>
+      )}
+      <div className="text-3xl font-bold tracking-tight" style={{ color: isDark ? "#F8FAFC" : "#16181D" }}>
+        {formatValue(value, spec.format)}
+      </div>
+      {spec.description && (
+        <p className="text-xs mt-2" style={{ color: isDark ? "#64748B" : "#667085" }}>
+          {spec.description}
+        </p>
+      )}
     </div>
   );
 }
 
-const tooltipStyle = {
-  contentStyle: {
-    background: "rgba(18, 20, 29, 0.95)",
-    border: "1px solid rgba(255, 255, 255, 0.12)",
-    borderRadius: 8,
-    boxShadow: "0 8px 20px rgba(0,0,0,0.4)",
-    padding: "8px 12px",
-  },
-  labelStyle: { color: "#F1F5F9", fontWeight: 600, fontSize: "12px", marginBottom: "4px" },
-  itemStyle: { color: "#CBD5E1", fontSize: "12px" },
-};
-
 export default function DataVisualization({ spec, data, className = "" }: DataVisualizationProps) {
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === "dark";
+  const colors = isDark ? DARK_CHART_COLORS : LIGHT_CHART_COLORS;
+
+  const tooltipStyle = {
+    contentStyle: {
+      background: isDark ? "rgba(18, 20, 29, 0.96)" : "rgba(255, 255, 255, 0.98)",
+      border: isDark ? "1px solid rgba(255, 255, 255, 0.12)" : "1px solid rgba(226, 228, 232, 0.9)",
+      borderRadius: 8,
+      boxShadow: isDark ? "0 8px 24px rgba(0,0,0,0.5)" : "0 10px 25px -4px rgba(0,0,0,0.1), 0 4px 8px -2px rgba(0,0,0,0.05)",
+      padding: "8px 12px",
+    },
+    labelStyle: { color: isDark ? "#F1F5F9" : "#16181D", fontWeight: 600, fontSize: "12px", marginBottom: "4px" },
+    itemStyle: { color: isDark ? "#CBD5E1" : "#475467", fontSize: "12px" },
+  };
+
+  const gridStroke = isDark ? "rgba(255, 255, 255, 0.06)" : "rgba(0, 0, 0, 0.06)";
+  const tickColor = isDark ? "#94A3B8" : "#667085";
+  const tickLineColor = isDark ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)";
+  const titleColor = isDark ? "#E2E8F0" : "#16181D";
+  const dotStroke = isDark ? "#0D0F12" : "#FFFFFF";
+
   if (!data || data.length === 0) {
     return (
-      <div className="text-center py-8" style={{ color: "#64748B" }}>
+      <div className="text-center py-8" style={{ color: isDark ? "#64748B" : "#667085" }}>
         <p className="text-sm">No data to visualize.</p>
       </div>
     );
@@ -91,12 +130,12 @@ export default function DataVisualization({ spec, data, className = "" }: DataVi
   };
 
   const chartTitle = spec.title && (
-    <p className="text-sm font-semibold mb-4" style={{ color: "#E2E8F0" }}>{spec.title}</p>
+    <p className="text-sm font-semibold mb-4" style={{ color: titleColor }}>{spec.title}</p>
   );
 
   switch (spec.type) {
     case "kpi":
-      return <KPICard spec={spec} data={data} />;
+      return <KPICard spec={spec} data={data} isDark={isDark} />;
 
     case "bar":
       return (
@@ -104,24 +143,23 @@ export default function DataVisualization({ spec, data, className = "" }: DataVi
           {chartTitle}
           <ResponsiveContainer width="100%" height={height}>
             <BarChart {...chartProps}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" vertical={false} />
-              <XAxis dataKey={xKey} tick={{ fill: "#94A3B8", fontSize: 11 }} tickLine={{ stroke: "rgba(255,255,255,0.1)" }} />
-              <YAxis tick={{ fill: "#94A3B8", fontSize: 11 }} tickLine={{ stroke: "rgba(255,255,255,0.1)" }} tickFormatter={(v) => formatValue(v, spec.format)} />
-              <Tooltip {...tooltipStyle} formatter={(v) => [formatValue(v, spec.format)]} cursor={{ fill: "rgba(255,255,255,0.04)" }} />
-              {yKeys.length > 1 && <Legend wrapperStyle={{ color: "#94A3B8", fontSize: 12, paddingTop: 8 }} />}
+              <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} vertical={false} />
+              <XAxis dataKey={xKey} tick={{ fill: tickColor, fontSize: 11 }} tickLine={{ stroke: tickLineColor }} />
+              <YAxis tick={{ fill: tickColor, fontSize: 11 }} tickLine={{ stroke: tickLineColor }} tickFormatter={(v) => formatValue(v, spec.format)} />
+              <Tooltip {...tooltipStyle} formatter={(v) => [formatValue(v, spec.format)]} cursor={{ fill: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.03)" }} />
+              {yKeys.length > 1 && <Legend wrapperStyle={{ color: tickColor, fontSize: 12, paddingTop: 8 }} />}
               {yKeys.map((key, i) => (
                 <Bar
                   key={key}
                   dataKey={key}
-                  fill={CHART_COLORS[i % CHART_COLORS.length]}
+                  fill={colors[i % colors.length]}
                   radius={[5, 5, 0, 0]}
                   maxBarSize={60}
                 >
-                  {/* For single-series bar charts, color each bar individually so it looks vibrant and colorful */}
                   {yKeys.length === 1 && data.map((_, index) => (
                     <Cell
                       key={`cell-${index}`}
-                      fill={CHART_COLORS[index % CHART_COLORS.length]}
+                      fill={colors[index % colors.length]}
                     />
                   ))}
                 </Bar>
@@ -137,20 +175,20 @@ export default function DataVisualization({ spec, data, className = "" }: DataVi
           {chartTitle}
           <ResponsiveContainer width="100%" height={height}>
             <LineChart {...chartProps}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" vertical={false} />
-              <XAxis dataKey={xKey} tick={{ fill: "#94A3B8", fontSize: 11 }} tickLine={{ stroke: "rgba(255,255,255,0.1)" }} />
-              <YAxis tick={{ fill: "#94A3B8", fontSize: 11 }} tickLine={{ stroke: "rgba(255,255,255,0.1)" }} tickFormatter={(v) => formatValue(v, spec.format)} />
+              <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} vertical={false} />
+              <XAxis dataKey={xKey} tick={{ fill: tickColor, fontSize: 11 }} tickLine={{ stroke: tickLineColor }} />
+              <YAxis tick={{ fill: tickColor, fontSize: 11 }} tickLine={{ stroke: tickLineColor }} tickFormatter={(v) => formatValue(v, spec.format)} />
               <Tooltip {...tooltipStyle} formatter={(v) => [formatValue(v, spec.format)]} />
-              {yKeys.length > 1 && <Legend wrapperStyle={{ color: "#94A3B8", fontSize: 12, paddingTop: 8 }} />}
+              {yKeys.length > 1 && <Legend wrapperStyle={{ color: tickColor, fontSize: 12, paddingTop: 8 }} />}
               {yKeys.map((key, i) => (
                 <Line
                   key={key}
                   type="monotone"
                   dataKey={key}
-                  stroke={CHART_COLORS[i % CHART_COLORS.length]}
+                  stroke={colors[i % colors.length]}
                   strokeWidth={2.5}
-                  dot={{ r: 3.5, fill: CHART_COLORS[i % CHART_COLORS.length], stroke: "#0D0F12", strokeWidth: 1.5 }}
-                  activeDot={{ r: 6, fill: CHART_COLORS[i % CHART_COLORS.length] }}
+                  dot={{ r: 3.5, fill: colors[i % colors.length], stroke: dotStroke, strokeWidth: 1.5 }}
+                  activeDot={{ r: 6, fill: colors[i % colors.length] }}
                 />
               ))}
             </LineChart>
@@ -167,22 +205,22 @@ export default function DataVisualization({ spec, data, className = "" }: DataVi
               <defs>
                 {yKeys.map((key, i) => (
                   <linearGradient key={key} id={`grad-${key}`} x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor={CHART_COLORS[i % CHART_COLORS.length]} stopOpacity={0.35} />
-                    <stop offset="95%" stopColor={CHART_COLORS[i % CHART_COLORS.length]} stopOpacity={0.02} />
+                    <stop offset="5%" stopColor={colors[i % colors.length]} stopOpacity={0.35} />
+                    <stop offset="95%" stopColor={colors[i % colors.length]} stopOpacity={0.02} />
                   </linearGradient>
                 ))}
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" vertical={false} />
-              <XAxis dataKey={xKey} tick={{ fill: "#94A3B8", fontSize: 11 }} tickLine={{ stroke: "rgba(255,255,255,0.1)" }} />
-              <YAxis tick={{ fill: "#94A3B8", fontSize: 11 }} tickLine={{ stroke: "rgba(255,255,255,0.1)" }} tickFormatter={(v) => formatValue(v, spec.format)} />
+              <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} vertical={false} />
+              <XAxis dataKey={xKey} tick={{ fill: tickColor, fontSize: 11 }} tickLine={{ stroke: tickLineColor }} />
+              <YAxis tick={{ fill: tickColor, fontSize: 11 }} tickLine={{ stroke: tickLineColor }} tickFormatter={(v) => formatValue(v, spec.format)} />
               <Tooltip {...tooltipStyle} formatter={(v) => [formatValue(v, spec.format)]} />
-              {yKeys.length > 1 && <Legend wrapperStyle={{ color: "#94A3B8", fontSize: 12, paddingTop: 8 }} />}
+              {yKeys.length > 1 && <Legend wrapperStyle={{ color: tickColor, fontSize: 12, paddingTop: 8 }} />}
               {yKeys.map((key, i) => (
                 <Area
                   key={key}
                   type="monotone"
                   dataKey={key}
-                  stroke={CHART_COLORS[i % CHART_COLORS.length]}
+                  stroke={colors[i % colors.length]}
                   strokeWidth={2.5}
                   fill={`url(#grad-${key})`}
                 />
@@ -211,15 +249,15 @@ export default function DataVisualization({ spec, data, className = "" }: DataVi
                 outerRadius="72%"
                 innerRadius={innerRadius}
                 paddingAngle={3}
-                stroke="#0D0F12"
+                stroke={dotStroke}
                 strokeWidth={2}
               >
                 {data.map((_, i) => (
-                  <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                  <Cell key={i} fill={colors[i % colors.length]} />
                 ))}
               </Pie>
               <Tooltip {...tooltipStyle} formatter={(v) => [formatValue(v, spec.format)]} />
-              <Legend wrapperStyle={{ color: "#94A3B8", fontSize: 12, paddingTop: 8 }} />
+              <Legend wrapperStyle={{ color: tickColor, fontSize: 12, paddingTop: 8 }} />
             </PieChart>
           </ResponsiveContainer>
         </div>
@@ -234,11 +272,11 @@ export default function DataVisualization({ spec, data, className = "" }: DataVi
           {chartTitle}
           <ResponsiveContainer width="100%" height={height}>
             <ScatterChart {...chartProps}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
-              <XAxis dataKey={xK} name={xK} tick={{ fill: "#94A3B8", fontSize: 11 }} />
-              <YAxis dataKey={yK} name={yK} tick={{ fill: "#94A3B8", fontSize: 11 }} />
+              <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
+              <XAxis dataKey={xK} name={xK} tick={{ fill: tickColor, fontSize: 11 }} />
+              <YAxis dataKey={yK} name={yK} tick={{ fill: tickColor, fontSize: 11 }} />
               <Tooltip {...tooltipStyle} />
-              <Scatter data={data} fill={CHART_COLORS[0]} />
+              <Scatter data={data} fill={colors[0]} />
             </ScatterChart>
           </ResponsiveContainer>
         </div>
@@ -249,3 +287,4 @@ export default function DataVisualization({ spec, data, className = "" }: DataVi
       return null;
   }
 }
+

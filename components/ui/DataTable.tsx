@@ -1,4 +1,5 @@
 "use client";
+
 import { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -29,15 +30,15 @@ export default function DataTable({ columns, rows, truncated, rowCount, classNam
 
   if (!columns.length || !rows.length) {
     return (
-      <div className="text-center py-6" style={{ color: "#4A4A4A" }}>
-        <p className="text-sm">No results returned.</p>
+      <div className="text-center py-6" style={{ color: "var(--text-muted)" }}>
+        <p className="text-sm font-medium">No results returned.</p>
       </div>
     );
   }
 
   return (
     <div className={`${className}`}>
-      <div className="overflow-x-auto rounded-xl" style={{ border: "1px solid rgba(255,255,255,0.06)" }}>
+      <div className="overflow-x-auto rounded-xl border shadow-sm" style={{ borderColor: "var(--border-subtle)" }}>
         <table className="data-table">
           <thead>
             <tr>
@@ -54,9 +55,9 @@ export default function DataTable({ columns, rows, truncated, rowCount, classNam
                   return (
                     <td key={col}>
                       {isNull ? (
-                        <span className="null-value">NULL</span>
+                        <span className="null-value font-mono">NULL</span>
                       ) : (
-                        <span className="font-mono text-sm">{display}</span>
+                        <span className="font-mono text-sm font-medium">{display}</span>
                       )}
                     </td>
                   );
@@ -69,12 +70,12 @@ export default function DataTable({ columns, rows, truncated, rowCount, classNam
 
       {/* Footer */}
       <div className="flex items-center justify-between mt-3 px-1">
-        <p className="text-xs" style={{ color: "#6B6B6B" }}>
+        <p className="text-xs font-medium" style={{ color: "var(--text-muted)" }}>
           {truncated
             ? `Showing first ${rows.length.toLocaleString()} of ${rowCount?.toLocaleString() ?? rows.length.toLocaleString()}+ rows`
             : `${rows.length.toLocaleString()} row${rows.length !== 1 ? "s" : ""}`}
           {truncated && (
-            <span className="ml-2" style={{ color: "#F59E0B" }}>
+            <span className="ml-2 font-semibold" style={{ color: "var(--warning-amber)" }}>
               (result truncated for performance)
             </span>
           )}
@@ -82,17 +83,25 @@ export default function DataTable({ columns, rows, truncated, rowCount, classNam
 
         {totalPages > 1 && (
           <div className="flex items-center gap-2">
-            <button onClick={() => setPage(Math.max(0, page - 1))} disabled={page === 0}
-              className="p-1 rounded transition-smooth disabled:opacity-30"
-              style={{ color: "#AFAFAF" }}>
+            <button
+              onClick={() => setPage(Math.max(0, page - 1))}
+              disabled={page === 0}
+              className="p-1 rounded-lg border transition-smooth disabled:opacity-30 hover:bg-[var(--bg-card-hover)]"
+              style={{ borderColor: "var(--border-subtle)", color: "var(--text-secondary)" }}
+              aria-label="Previous page"
+            >
               <ChevronLeft size={16} />
             </button>
-            <span className="text-xs" style={{ color: "#6B6B6B" }}>
+            <span className="text-xs font-medium" style={{ color: "var(--text-secondary)" }}>
               {page + 1} / {totalPages}
             </span>
-            <button onClick={() => setPage(Math.min(totalPages - 1, page + 1))} disabled={page === totalPages - 1}
-              className="p-1 rounded transition-smooth disabled:opacity-30"
-              style={{ color: "#AFAFAF" }}>
+            <button
+              onClick={() => setPage(Math.min(totalPages - 1, page + 1))}
+              disabled={page === totalPages - 1}
+              className="p-1 rounded-lg border transition-smooth disabled:opacity-30 hover:bg-[var(--bg-card-hover)]"
+              style={{ borderColor: "var(--border-subtle)", color: "var(--text-secondary)" }}
+              aria-label="Next page"
+            >
               <ChevronRight size={16} />
             </button>
           </div>

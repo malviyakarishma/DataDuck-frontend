@@ -1,14 +1,16 @@
 "use client";
+
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Database, Eye, EyeOff, ArrowRight, Loader2, Check, ShieldCheck, Mail, RefreshCw, ArrowLeft } from "lucide-react";
+import { Eye, EyeOff, ArrowRight, Loader2, Check, Mail, RefreshCw, ArrowLeft } from "lucide-react";
 import { authApi, getApiErrorMessage, isAuthenticated } from "@/lib/api";
+import ThemeToggle from "@/components/ui/ThemeToggle";
 
 export default function SignupPage() {
   const router = useRouter();
   const [step, setStep] = useState<"register" | "otp">("register");
-  
+
   // Registration state
   const [form, setForm] = useState({
     full_name: "",
@@ -49,7 +51,7 @@ export default function SignupPage() {
   })();
 
   const strengthLabel = ["", "Weak", "Fair", "Good", "Strong"][passwordStrength];
-  const strengthColor = ["", "#EF4444", "#F59E0B", "#10B981", "#22C55E"][passwordStrength];
+  const strengthColor = ["", "#EF4444", "#F59E0B", "#10B981", "#087F5B"][passwordStrength];
 
   // Resend countdown timer
   useEffect(() => {
@@ -78,7 +80,6 @@ export default function SignupPage() {
         setStep("otp");
         setResendTimer(30);
         setCanResend(false);
-        // Auto focus first OTP input box
         setTimeout(() => inputRefs.current[0]?.focus(), 100);
       } else {
         router.push("/dashboard");
@@ -91,20 +92,17 @@ export default function SignupPage() {
   };
 
   const handleOtpChange = (index: number, value: string) => {
-    // Only accept numeric digit
     if (value && !/^\d+$/.test(value)) return;
 
     const newDigits = [...otpDigits];
-    newDigits[index] = value.slice(-1); // Take single character
+    newDigits[index] = value.slice(-1);
     setOtpDigits(newDigits);
     setOtpError("");
 
-    // Auto advance focus to next box
     if (value && index < 5) {
       inputRefs.current[index + 1]?.focus();
     }
 
-    // If 6 digits completed, auto-submit
     const fullCode = newDigits.join("");
     if (fullCode.length === 6 && newDigits.every((d) => d !== "")) {
       verifyOtpCode(fullCode);
@@ -168,35 +166,34 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6" style={{ background: "var(--bg-void)" }}>
-      <div className="fixed top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full pointer-events-none"
-        style={{ background: "radial-gradient(circle, rgba(150,150,150,0.04) 0%, transparent 70%)", filter: "blur(60px)" }} />
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 relative" style={{ background: "var(--bg-void)" }}>
+      {/* Top right theme toggle */}
+      <div className="absolute top-5 right-5 sm:top-6 sm:right-6">
+        <ThemeToggle />
+      </div>
 
-      <div className="w-full max-w-md animate-scale-in">
-        <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-2 mb-6 group cursor-pointer">
-            <img src="/duck.png" alt="DataDuck Logo" className="w-14 h-14 object-contain transition-transform group-hover:scale-105" />
-            <div className="text-left flex flex-col justify-center">
-              <span className="font-bold text-3xl text-gradient-silver block leading-tight tracking-tight">DataDuck</span>
-              <span className="text-xs font-semibold tracking-wider text-gray-400 mt-0.5 block">Doubt. Dig. Discover.</span>
-            </div>
-          </Link>
-          <h1 className="text-2xl font-bold mb-2" style={{ color: "#E5E7EB" }}>
-            {step === "register" ? "Create your account" : "Two-Factor Verification"}
-          </h1>
-          <p className="text-sm" style={{ color: "#6B6B6B" }}>
-            {step === "register"
-              ? "Start analyzing your database with AI"
-              : `We sent a 6-digit verification code to ${form.email}`}
-          </p>
-        </div>
+      <div className="w-full max-w-[440px] animate-scale-in my-auto">
+        <div className="card-luxury p-7 sm:p-9 border shadow-xl rounded-2xl" style={{ background: "var(--bg-card)" }}>
+          {/* Logo & Header */}
+          <div className="text-center mb-6">
+            <Link href="/" className="inline-block mb-3.5 group cursor-pointer">
+              <img src="/duck.png" alt="DataDuck Logo" className="w-13 h-13 object-contain transition-transform group-hover:scale-105 mx-auto" style={{ width: "52px", height: "52px" }} />
+            </Link>
+            <h1 className="text-2xl font-bold mb-1.5 tracking-tight" style={{ color: "var(--text-primary)" }}>
+              {step === "register" ? "Create your account" : "Two-Factor Verification"}
+            </h1>
+            <p className="text-sm font-medium" style={{ color: "var(--text-secondary)" }}>
+              {step === "register"
+                ? "Start analyzing your database with AI"
+                : `We sent a 6-digit verification code to ${form.email}`}
+            </p>
+          </div>
 
-        <div className="card-luxury p-8">
           {step === "register" ? (
             /* STEP 1: Registration Form */
             <form onSubmit={handleRegisterSubmit} className="space-y-5">
               <div>
-                <label className="block text-sm font-medium mb-2" style={{ color: "#AFAFAF" }}>Full Name</label>
+                <label className="block text-sm font-semibold mb-2" style={{ color: "var(--text-secondary)" }}>Full Name</label>
                 <input
                   id="full_name"
                   type="text"
@@ -210,7 +207,7 @@ export default function SignupPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2" style={{ color: "#AFAFAF" }}>Email</label>
+                <label className="block text-sm font-semibold mb-2" style={{ color: "var(--text-secondary)" }}>Email</label>
                 <input
                   id="signup_email"
                   type="email"
@@ -224,7 +221,7 @@ export default function SignupPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2" style={{ color: "#AFAFAF" }}>Password</label>
+                <label className="block text-sm font-semibold mb-2" style={{ color: "var(--text-secondary)" }}>Password</label>
                 <div className="relative">
                   <input
                     id="signup_password"
@@ -236,9 +233,12 @@ export default function SignupPage() {
                     value={form.password}
                     onChange={(e) => setForm({ ...form, password: e.target.value })}
                   />
-                  <button type="button" onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2"
-                    style={{ color: "#6B6B6B" }}>
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 transition-smooth hover:opacity-80"
+                    style={{ color: "var(--text-muted)" }}
+                  >
                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
@@ -246,17 +246,20 @@ export default function SignupPage() {
                   <div className="mt-2">
                     <div className="flex gap-1 mb-1">
                       {[1, 2, 3, 4].map((i) => (
-                        <div key={i} className="h-1 flex-1 rounded-full transition-all duration-300"
-                          style={{ background: i <= passwordStrength ? strengthColor : "rgba(255,255,255,0.08)" }} />
+                        <div
+                          key={i}
+                          className="h-1.5 flex-1 rounded-full transition-all duration-300"
+                          style={{ background: i <= passwordStrength ? strengthColor : "var(--border-subtle)" }}
+                        />
                       ))}
                     </div>
-                    <span className="text-xs" style={{ color: strengthColor }}>{strengthLabel}</span>
+                    <span className="text-xs font-bold" style={{ color: strengthColor }}>{strengthLabel}</span>
                   </div>
                 )}
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2" style={{ color: "#AFAFAF" }}>Confirm Password</label>
+                <label className="block text-sm font-semibold mb-2" style={{ color: "var(--text-secondary)" }}>Confirm Password</label>
                 <div className="relative">
                   <input
                     id="confirm_password"
@@ -270,7 +273,7 @@ export default function SignupPage() {
                   />
                   {form.confirm_password && form.password === form.confirm_password && (
                     <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                      <Check size={18} style={{ color: "#22C55E" }} />
+                      <Check size={18} style={{ color: "var(--accent-emerald)" }} />
                     </div>
                   )}
                 </div>
@@ -278,12 +281,15 @@ export default function SignupPage() {
 
               {error && (
                 <div className="warning-box animate-fade-in">
-                  <p className="text-sm">{error}</p>
+                  <p className="text-sm font-medium">{error}</p>
                 </div>
               )}
 
-              <button type="submit" disabled={loading}
-                className="btn-primary w-full flex items-center justify-center gap-2 py-3">
+              <button
+                type="submit"
+                disabled={loading}
+                className="btn-primary w-full flex items-center justify-center gap-2 py-3 font-semibold shadow-sm"
+              >
                 {loading ? (
                   <><Loader2 size={18} className="animate-spin" /> Creating account...</>
                 ) : (
@@ -295,21 +301,18 @@ export default function SignupPage() {
             /* STEP 2: 2MFA OTP Verification Screen */
             <div className="space-y-6 animate-fade-in">
               <div className="flex flex-col items-center justify-center text-center">
-                <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4"
-                  style={{ background: "rgba(96,165,250,0.1)", border: "1px solid rgba(96,165,250,0.25)" }}>
-                  <ShieldCheck size={28} className="text-blue-400" />
-                </div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-blue-400 mb-1">2MFA Verification</p>
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs"
-                  style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "#AFAFAF" }}>
-                  <Mail size={13} />
+                <div
+                  className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-medium border mb-1"
+                  style={{ background: "var(--bg-card-raised)", borderColor: "var(--border-subtle)", color: "var(--text-secondary)" }}
+                >
+                  <Mail size={13} style={{ color: "var(--accent-emerald)" }} />
                   <span>{form.email}</span>
                 </div>
               </div>
 
               {/* 6 Digit Input Boxes */}
               <div>
-                <label className="block text-xs font-medium text-center mb-3" style={{ color: "#8E8E93" }}>
+                <label className="block text-xs font-semibold text-center mb-3" style={{ color: "var(--text-muted)" }}>
                   Enter 6-Digit Code
                 </label>
                 <div className="flex justify-between gap-2">
@@ -326,10 +329,10 @@ export default function SignupPage() {
                       onPaste={handleOtpPaste}
                       className="w-12 h-14 text-center text-xl font-bold rounded-xl transition-all duration-200 focus:outline-none"
                       style={{
-                        background: "rgba(255,255,255,0.03)",
-                        border: digit ? "1px solid rgba(96,165,250,0.6)" : "1px solid rgba(255,255,255,0.1)",
-                        color: "#F3F4F6",
-                        boxShadow: digit ? "0 0 12px rgba(96,165,250,0.15)" : "none",
+                        background: "var(--bg-card-raised)",
+                        border: digit ? "2px solid var(--accent-emerald)" : "1px solid var(--border-dim)",
+                        color: "var(--text-primary)",
+                        boxShadow: digit ? "0 0 10px rgba(8, 127, 91, 0.15)" : "none",
                       }}
                     />
                   ))}
@@ -338,13 +341,12 @@ export default function SignupPage() {
 
               {otpError && (
                 <div className="warning-box animate-fade-in">
-                  <p className="text-sm">{otpError}</p>
+                  <p className="text-sm font-medium">{otpError}</p>
                 </div>
               )}
 
               {otpSuccessMsg && (
-                <div className="p-3 rounded-lg text-sm animate-fade-in flex items-center gap-2"
-                  style={{ background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.2)", color: "#4ADE80" }}>
+                <div className="p-3 rounded-lg text-sm animate-fade-in flex items-center gap-2 badge-success">
                   <Check size={16} />
                   <span>{otpSuccessMsg}</span>
                 </div>
@@ -354,7 +356,8 @@ export default function SignupPage() {
                 type="button"
                 onClick={() => verifyOtpCode(otpDigits.join(""))}
                 disabled={otpLoading || otpDigits.some((d) => d === "")}
-                className="btn-primary w-full flex items-center justify-center gap-2 py-3">
+                className="btn-primary w-full flex items-center justify-center gap-2 py-3 font-semibold shadow-sm"
+              >
                 {otpLoading ? (
                   <><Loader2 size={18} className="animate-spin" /> Verifying Code...</>
                 ) : (
@@ -364,18 +367,19 @@ export default function SignupPage() {
 
               {/* Resend OTP Section */}
               <div className="pt-2 text-center flex flex-col items-center gap-2">
-                <p className="text-xs" style={{ color: "#6B6B6B" }}>
-                  Didn't receive the code? Check your spam folder or
+                <p className="text-xs font-medium" style={{ color: "var(--text-muted)" }}>
+                  Didn't receive the code? Check spam folder or
                 </p>
                 <button
                   type="button"
                   onClick={handleResendOtp}
                   disabled={!canResend || otpLoading}
-                  className="inline-flex items-center gap-1.5 text-xs font-semibold transition-all duration-200"
+                  className="inline-flex items-center gap-1.5 text-xs font-bold transition-all duration-200"
                   style={{
-                    color: canResend ? "#60A5FA" : "#4B5563",
+                    color: canResend ? "var(--accent-emerald)" : "var(--text-muted)",
                     cursor: canResend ? "pointer" : "not-allowed",
-                  }}>
+                  }}
+                >
                   <RefreshCw size={12} className={otpLoading ? "animate-spin" : ""} />
                   {canResend ? "Resend Verification Code" : `Resend code in ${resendTimer}s`}
                 </button>
@@ -383,18 +387,19 @@ export default function SignupPage() {
                 <button
                   type="button"
                   onClick={() => setStep("register")}
-                  className="inline-flex items-center gap-1 text-xs mt-3 transition-colors"
-                  style={{ color: "#8E8E93" }}>
+                  className="inline-flex items-center gap-1 text-xs mt-3 font-medium hover:opacity-80"
+                  style={{ color: "var(--text-muted)" }}
+                >
                   <ArrowLeft size={13} /> Back to Sign Up
                 </button>
               </div>
             </div>
           )}
 
-          <div className="mt-6 pt-6 text-center" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-            <p className="text-sm" style={{ color: "#6B6B6B" }}>
+          <div className="mt-6 pt-6 text-center border-t" style={{ borderColor: "var(--border-subtle)" }}>
+            <p className="text-sm font-medium" style={{ color: "var(--text-secondary)" }}>
               Already have an account?{" "}
-              <Link href="/login" className="font-medium transition-smooth" style={{ color: "#C7C7C7" }}>
+              <Link href="/login" className="font-bold hover:underline" style={{ color: "var(--accent-emerald)" }}>
                 Sign in →
               </Link>
             </p>
@@ -404,4 +409,3 @@ export default function SignupPage() {
     </div>
   );
 }
-

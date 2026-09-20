@@ -130,6 +130,29 @@ export const authApi = {
     return res.data;
   },
 
+  forgotPassword: async (email: string): Promise<{ message: string; email: string; requires_otp: boolean }> => {
+    const res = await apiClient.post('/auth/forgot-password', { email });
+    return res.data;
+  },
+
+  verifyResetOtp: async (data: { email: string; otp_code: string }): Promise<{ valid: boolean; message: string; email: string }> => {
+    const res = await apiClient.post('/auth/verify-reset-otp', data);
+    return res.data;
+  },
+
+  resetPassword: async (data: {
+    email: string;
+    otp_code: string;
+    new_password: string;
+    confirm_password: string;
+  }): Promise<TokenResponse> => {
+    const res = await apiClient.post('/auth/reset-password', data);
+    if (res.data) {
+      _storeTokens(res.data);
+    }
+    return res.data;
+  },
+
   logout: async (): Promise<void> => {
     try {
       await apiClient.post('/auth/logout');
@@ -267,8 +290,15 @@ function _clearTokens() {
 
 export function getApiErrorMessage(error: unknown): string {
   if (axios.isAxiosError(error)) {
-    const data = error.response?.data as ApiError | undefined;
-    if (data?.error) return data.error;
+    const data = error.response?.data as { detail?: string | Array<{ msg?: string }>; error?: string; message?: string } | string | undefined;
+    if (data && typeof data === 'object') {
+      if (typeof data.detail === 'string') return data.detail;
+      if (Array.isArray(data.detail) && data.detail.length > 0 && data.detail[0].msg) {
+        return data.detail[0].msg;
+      }
+      if (data.error) return data.error;
+      if (data.message) return data.message;
+    }
     if (typeof data === 'string') return data;
     return error.message;
   }
