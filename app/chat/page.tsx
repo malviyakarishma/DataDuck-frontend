@@ -190,6 +190,25 @@ function MessageBubble({ msg }: { msg: ChatMessage }) {
   );
 }
 
+function dedupeConversations(list: Conversation[]): Conversation[] {
+  const seen = new Set<string>();
+  return list.filter((c) => {
+    if (!c.id || seen.has(c.id)) return false;
+    seen.add(c.id);
+    return true;
+  });
+}
+
+function dedupeMessages(list: ChatMessage[]): ChatMessage[] {
+  const seen = new Set<string>();
+  return list.filter((m) => {
+    const key = m.id || `${m.role}_${m.answer}_${m.created_at}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 function ChatContent() {
   const router = useRouter();
   const toast = useToast();
@@ -218,9 +237,21 @@ function ChatContent() {
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const currentConvIdRef = useRef<string | null>(null);
+  const sendingRef = useRef(false);
+  const handledInitialQuestionRef = useRef(false);
+  const initLoadedRef = useRef(false);
+
+  // Sync ref with currentConversationId
+  useEffect(() => {
+    currentConvIdRef.current = currentConversationId;
+  }, [currentConversationId]);
 
   useEffect(() => {
     const init = async () => {
+      if (initLoadedRef.current) return;
+      initLoadedRef.current = true;
+
       const isAuth = await ensureAuthenticated();
       if (!isAuth) {
         router.push("/login");
@@ -242,7 +273,7 @@ function ChatContent() {
         chatApi.listConversations(),
       ]);
       setDatabases(dbData.databases);
-      setConversations(convData.conversations);
+      setConversations(dedupeConversations(convData.conversations));
 
       let targetDb: DatabaseConnection | undefined;
       if (initialDbId) {
@@ -255,7 +286,13 @@ function ChatContent() {
 
       if (initialConvId) {
         loadConversation(initialConvId);
-      } else if (initialQuestion && targetDb) {
+      } else if (initialQuestion && targetDb && !handledInitialQuestionRef.current) {
+        handledInitialQuestionRef.current = true;
+        // Clean URL so re-renders don't re-trigger question
+        if (typeof window !== "undefined") {
+          const cleanUrl = initialDbId ? `/chat?db=${initialDbId}` : "/chat";
+          window.history.replaceState(null, "", cleanUrl);
+        }
         handleSend(initialQuestion, targetDb);
       }
     } catch {
@@ -265,10 +302,11 @@ function ChatContent() {
 
   const loadConversation = async (convId: string) => {
     setLoadingHistory(true);
+    currentConvIdRef.current = convId;
+    setCurrentConversationId(convId);
     try {
       const data = await chatApi.getMessages(convId);
-      setCurrentConversationId(convId);
-      setMessages(data.messages);
+      setMessages(dedupeMessages(data.messages));
       const conv = conversations.find((c) => c.id === convId);
       if (conv) {
         const db = databases.find((d) => d.id === conv.database_id);
@@ -283,6 +321,7 @@ function ChatContent() {
 
   const handleNewChat = () => {
     setMessages([]);
+    currentConvIdRef.current = null;
     setCurrentConversationId(null);
     setInput("");
     inputRef.current?.focus();
@@ -316,7 +355,7 @@ function ChatContent() {
     try {
       if (deleteModal.type === "single" && deleteModal.conversationId) {
         await chatApi.deleteConversation(deleteModal.conversationId);
-        setConversations((prev) => prev.filter((c) => c.id !== deleteModal.conversationId));
+        setConversations((prev) => dedupeConversations(prev.filter((c) => c.id !== deleteModal.conversationId)));
         if (currentConversationId === deleteModal.conversationId) {
           handleNewChat();
         }
@@ -336,14 +375,16 @@ function ChatContent() {
   };
 
   const handleSend = async (overrideMessage?: string, explicitDb?: DatabaseConnection) => {
+    if (sendingRef.current) return;
     const dbToUse = explicitDb || selectedDb;
     const message = (overrideMessage || input).trim();
-    if (!message || !dbToUse || loading) return;
+    if (!message || !dbToUse) return;
 
+    sendingRef.current = true;
     if (!overrideMessage) setInput("");
 
     const userMsg: ChatMessage = {
-      id: Date.now().toString(),
+      id: "usr_" + Date.now().toString(),
       role: "user",
       answer: message,
       insights: [],
@@ -351,7 +392,7 @@ function ChatContent() {
       created_at: new Date().toISOString(),
     };
 
-    setMessages((prev) => [...prev, userMsg]);
+    setMessages((prev) => dedupeMessages([...prev, userMsg]));
     setLoading(true);
     setStage("understanding");
 
@@ -363,25 +404,28 @@ function ChatContent() {
       setTimeout(() => setStage("analyzing"), 3200),
     ];
 
+    const activeConvId = currentConvIdRef.current || currentConversationId || undefined;
+
     try {
       const response = await chatApi.sendMessage({
         database_id: dbToUse.id,
         message,
-        conversation_id: currentConversationId || undefined,
+        conversation_id: activeConvId,
       });
 
       stageTimeouts.forEach(clearTimeout);
       setStage(null);
 
-      if (!currentConversationId) {
+      if (!currentConvIdRef.current && response.conversation_id) {
+        currentConvIdRef.current = response.conversation_id;
         setCurrentConversationId(response.conversation_id);
         const convList = await chatApi.listConversations();
-        setConversations(convList.conversations);
+        setConversations(dedupeConversations(convList.conversations));
       }
 
       const messageData = response.message || (response as unknown as ChatMessage);
       const aiMsg: ChatMessage = {
-        id: messageData.id || (Date.now() + 1).toString(),
+        id: messageData.id || "ai_" + (Date.now() + 1).toString(),
         role: "assistant",
         answer: messageData.answer,
         insights: messageData.insights || [],
@@ -393,26 +437,29 @@ function ChatContent() {
         created_at: messageData.created_at || new Date().toISOString(),
       };
 
-      setMessages((prev) => [...prev, aiMsg]);
+      setMessages((prev) => dedupeMessages([...prev, aiMsg]));
     } catch (err: unknown) {
       stageTimeouts.forEach(clearTimeout);
       setStage(null);
 
-      const errorMessage =
-        err instanceof Error ? err.message : "An error occurred while analyzing your database.";
+      let errorMessage = getApiErrorMessage(err);
+      if (!errorMessage || errorMessage.includes("status code 400") || errorMessage.includes("status code 500")) {
+        errorMessage = "I couldn't process this query. The requested table, collection, or field might not exist in your connected database schema. You can check the available tables using the Schema Explorer above or ask 'What tables are in this database?'.";
+      }
 
       const errorMsg: ChatMessage = {
-        id: (Date.now() + 1).toString(),
+        id: "err_" + (Date.now() + 1).toString(),
         role: "assistant",
         answer: errorMessage,
         insights: [],
-        warnings: ["Request could not be completed. Please try rephrasing your question."],
+        warnings: ["The requested entity was not found in your database schema."],
         created_at: new Date().toISOString(),
       };
 
-      setMessages((prev) => [...prev, errorMsg]);
+      setMessages((prev) => dedupeMessages([...prev, errorMsg]));
     } finally {
       setLoading(false);
+      sendingRef.current = false;
     }
   };
 
@@ -461,6 +508,7 @@ function ChatContent() {
                 onClick={() => {
                   setSelectedDb(db);
                   setMessages([]);
+                  currentConvIdRef.current = null;
                   setCurrentConversationId(null);
                 }}
                 className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-sm transition-smooth mb-1 font-medium"
@@ -642,12 +690,12 @@ function ChatContent() {
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-left">
                 {[
-                  "Explain my database schema",
+                  "Explain my database schema and structure",
                   "Show database ER diagram",
-                  "What tables are in my database?",
-                  "Show table relationships",
-                  "What are the top 10 customers by revenue?",
-                  "Are there any NULL values in my data?",
+                  "What tables or collections exist in this database?",
+                  "Show sample rows from my data",
+                  "Check data quality and missing values",
+                  "Summarize key metrics and table counts",
                 ].map((q, i) => (
                   <button
                     key={i}

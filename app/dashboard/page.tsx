@@ -16,12 +16,21 @@ import ThemeToggle from "@/components/ui/ThemeToggle";
 
 const SUGGESTED_QUESTIONS = [
   "Analyze my database and give me an overview.",
-  "Which tables have the most missing values?",
-  "Show me the largest tables by row count.",
-  "What are the recent trends in my data?",
-  "Find any duplicate records.",
-  "Show the schema relationships between tables.",
+  "Which tables or collections have the most records?",
+  "Check data quality, nulls, and missing values.",
+  "Show the schema relationships and structure.",
+  "Show sample records from the primary tables.",
+  "What collections or tables exist in this database?",
 ];
+
+function dedupeConversations(list: Conversation[]): Conversation[] {
+  const seen = new Set<string>();
+  return list.filter((c) => {
+    if (!c.id || seen.has(c.id)) return false;
+    seen.add(c.id);
+    return true;
+  });
+}
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -54,7 +63,7 @@ export default function DashboardPage() {
         chatApi.listConversations(),
       ]);
       setDatabases(dbData.databases);
-      setConversations(convData.conversations);
+      setConversations(dedupeConversations(convData.conversations));
     } catch {
       // Handled by interceptor
     } finally {

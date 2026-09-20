@@ -18,7 +18,7 @@
 - 🗄️ **Visual Schema Inspector**: Browse database schemas, view table structures, column definitions, data types, primary/foreign keys, and preview sample rows.
 - 🔌 **Database Connection Hub**: Easily connect PostgreSQL, MySQL, SQLite, and MongoDB databases using connection strings or detailed form parameters.
 - 📑 **Data Table & Export**: Paginated, sortable data table view with 1-click export to CSV and JSON formats.
-- 🤖 **AI Model Switcher**: Switch on-the-fly between local offline LLMs (**Ollama**) and cloud models (**Gemini**, **OpenAI**, **Groq**).
+- 🤖 **AI Model Switcher**: Switch on-the-fly between local offline LLMs (**Ollama**) and cloud models (**Gemini**, **OpenAI**).
 - 🔐 **Secure Authentication**: User sign up, log in, session persistence, and automatic JWT token handling.
 - 🎨 **Modern Aesthetics**: Sleek dark/light-compatible layout, glassmorphism UI elements, smooth transitions, and responsive mobile/desktop drawer navigation.
 

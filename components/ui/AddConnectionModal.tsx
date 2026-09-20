@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, RefreshCw, CheckCircle2, XCircle, Loader2 } from "lucide-react";
+import { Plus, RefreshCw, CheckCircle2, XCircle, Loader2, X, AlertCircle } from "lucide-react";
 import { databasesApi, getApiErrorMessage } from "@/lib/api";
 import type { DatabaseConnection, TestConnectionResponse } from "@/lib/types";
 
@@ -158,34 +158,57 @@ export default function AddConnectionModal({ onClose, onAdded }: AddConnectionMo
             {/* Test result */}
             {testResult && (
               <div
-                className={`p-4 rounded-xl border animate-fade-in ${
+                className={`p-4 rounded-xl border animate-fade-in relative flex items-start justify-between gap-3 ${
                   testResult.success ? "badge-success" : "badge-error"
                 }`}
               >
-                <div className="flex items-center gap-2 mb-1">
-                  {testResult.success ? (
-                    <CheckCircle2 size={16} style={{ color: "var(--accent-emerald)" }} />
-                  ) : (
-                    <XCircle size={16} style={{ color: "var(--error-red)" }} />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    {testResult.success ? (
+                      <CheckCircle2 size={16} style={{ color: "var(--accent-emerald)" }} />
+                    ) : (
+                      <XCircle size={16} style={{ color: "var(--error-red)" }} />
+                    )}
+                    <p className="text-sm font-bold">
+                      {testResult.success ? "Connection Successful" : "Connection Failed"}
+                    </p>
+                  </div>
+                  <p className="text-xs ml-6 font-medium leading-relaxed">
+                    {testResult.message}
+                  </p>
+                  {testResult.db_type && (
+                    <p className="text-xs ml-6 mt-1 font-mono font-medium opacity-80">
+                      Database: {testResult.database_name} · Type: {testResult.db_type}
+                    </p>
                   )}
-                  <p className="text-sm font-bold">
-                    {testResult.success ? "Connection Successful" : "Connection Failed"}
-                  </p>
                 </div>
-                <p className="text-xs ml-6 font-medium">
-                  {testResult.message}
-                </p>
-                {testResult.db_type && (
-                  <p className="text-xs ml-6 mt-1 font-mono font-medium opacity-80">
-                    Database: {testResult.database_name} · Type: {testResult.db_type}
-                  </p>
-                )}
+                <button
+                  type="button"
+                  onClick={() => setTestResult(null)}
+                  className="p-1 rounded-lg opacity-60 hover:opacity-100 transition-smooth flex-shrink-0 -mt-1 -mr-1"
+                  aria-label="Dismiss test result"
+                  title="Dismiss"
+                >
+                  <X size={15} />
+                </button>
               </div>
             )}
 
             {error && (
-              <div className="warning-box animate-fade-in">
-                <p className="text-sm font-medium">{error}</p>
+              <div className="warning-box animate-fade-in relative flex items-start justify-between gap-3 p-3.5 rounded-xl border">
+                <div className="flex items-start gap-2.5 min-w-0 flex-1">
+                  <AlertCircle size={16} className="flex-shrink-0 mt-0.5 text-amber-500" />
+                  <p className="text-xs font-medium leading-relaxed">{error}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setError("")}
+                  className="p-1 rounded-lg opacity-60 hover:opacity-100 transition-smooth flex-shrink-0 -mt-1 -mr-1"
+                  aria-label="Dismiss error"
+                  title="Dismiss"
+                >
+                  <X size={15} />
+                </button>
               </div>
             )}
           </div>
