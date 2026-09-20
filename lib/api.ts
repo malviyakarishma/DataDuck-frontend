@@ -17,6 +17,17 @@ const apiClient = axios.create({
   },
 });
 
+// Request interceptor — attach Authorization header if access token exists in localStorage
+apiClient.interceptors.request.use((config) => {
+  if (typeof window !== 'undefined') {
+    const token = localStorage.getItem('access_token');
+    if (token && !config.headers.Authorization) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+  }
+  return config;
+});
+
 let isRefreshing = false;
 let refreshSubscribers: Array<(error?: unknown) => void> = [];
 
@@ -274,6 +285,7 @@ export const healthApi = {
 
 function _storeTokens(data: TokenResponse | LoginResponse) {
   if (typeof window !== 'undefined') {
+    if (data.access_token) localStorage.setItem('access_token', data.access_token);
     if (data.user_id) localStorage.setItem('user_id', data.user_id);
     if (data.email) localStorage.setItem('user_email', data.email);
     if (data.full_name) localStorage.setItem('user_name', data.full_name);
@@ -282,6 +294,7 @@ function _storeTokens(data: TokenResponse | LoginResponse) {
 
 function _clearTokens() {
   if (typeof window !== 'undefined') {
+    localStorage.removeItem('access_token');
     localStorage.removeItem('user_id');
     localStorage.removeItem('user_email');
     localStorage.removeItem('user_name');
