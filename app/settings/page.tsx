@@ -4,7 +4,6 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Database, ArrowLeft, User, Lock, Trash2 } from "lucide-react";
 import { authApi, isAuthenticated, ensureAuthenticated, getCurrentUserName } from "@/lib/api";
-import { playQuackSound } from "@/lib/sound";
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -89,11 +88,11 @@ export default function SettingsPage() {
 
         {/* About */}
         <div className="card-luxury p-6">
-          <div onMouseEnter={playQuackSound} className="flex items-center gap-2 mb-4 cursor-pointer group">
+          <div className="flex items-center gap-2 mb-4 cursor-pointer group">
             <img src="/duck.png" alt="DataDuck Logo" className="w-10 h-10 object-contain transition-transform group-hover:scale-105" />
             <div className="flex flex-col justify-center">
               <h2 className="text-base font-semibold uppercase tracking-wider leading-none" style={{ color: "#E5E7EB" }}>About DataDuck</h2>
-              <span className="text-[10px] uppercase font-medium tracking-widest text-gray-500 mt-0.5 block">Ask. Dig. Discover.</span>
+              <span className="text-[10px] uppercase font-medium tracking-widest text-gray-500 mt-0.5 block">Doubt. Dig. Discover.</span>
             </div>
           </div>
           <div className="space-y-2 text-sm" style={{ color: "#6B6B6B" }}>

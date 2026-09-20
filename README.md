@@ -1,4 +1,4 @@
-# 🦆 DataDuck Frontend — Ask. Dig. Discover.
+# 🦆 DataDuck Frontend — Doubt. Dig. Discover.
 
 [![Next.js](https://img.shields.io/badge/Next.js-16.3-black.svg?logo=nextdotjs&logoColor=white)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19.0-61DAFB.svg?logo=react&logoColor=black)](https://react.dev/)

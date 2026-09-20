@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Database, Eye, EyeOff, ArrowRight, Loader2, Check, ShieldCheck, Mail, RefreshCw, ArrowLeft } from "lucide-react";
 import { authApi, getApiErrorMessage, isAuthenticated } from "@/lib/api";
-import { playQuackSound } from "@/lib/sound";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -175,11 +174,11 @@ export default function SignupPage() {
 
       <div className="w-full max-w-md animate-scale-in">
         <div className="text-center mb-8">
-          <Link href="/" onMouseEnter={playQuackSound} className="inline-flex items-center gap-2 mb-6 group cursor-pointer">
+          <Link href="/" className="inline-flex items-center gap-2 mb-6 group cursor-pointer">
             <img src="/duck.png" alt="DataDuck Logo" className="w-14 h-14 object-contain transition-transform group-hover:scale-105" />
             <div className="text-left flex flex-col justify-center">
               <span className="font-bold text-3xl text-gradient-silver block leading-tight tracking-tight">DataDuck</span>
-              <span className="text-xs font-semibold tracking-wider text-gray-400 mt-0.5 block">Ask. Dig. Discover.</span>
+              <span className="text-xs font-semibold tracking-wider text-gray-400 mt-0.5 block">Doubt. Dig. Discover.</span>
             </div>
           </Link>
           <h1 className="text-2xl font-bold mb-2" style={{ color: "#E5E7EB" }}>

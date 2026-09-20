@@ -6,7 +6,7 @@ import {
   BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
 import { isAuthenticated } from "@/lib/api";
-import { playQuackSound } from "@/lib/sound";
+
 
 // ── Mock chart data for product preview ──
 const mockRevenueData = [
@@ -31,11 +31,11 @@ function Navbar({ loggedIn }: { loggedIn: boolean }) {
     <nav className={`navbar transition-smooth ${scrolled ? "shadow-2xl" : ""}`}>
       <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
         {/* Logo */}
-        <Link href={loggedIn ? "/dashboard" : "/"} onMouseEnter={playQuackSound} className="flex items-center gap-2 group cursor-pointer">
+        <Link href={loggedIn ? "/dashboard" : "/"} className="flex items-center gap-2 group cursor-pointer">
           <img src="/duck.png" alt="DataDuck Logo" className="w-11 h-11 object-contain transition-transform group-hover:scale-105" />
           <div className="flex flex-col justify-center">
             <span className="font-bold text-xl tracking-tight text-gradient-silver leading-none">DataDuck</span>
-            <span className="text-[10px] tracking-wider uppercase font-semibold text-gray-400 mt-0.5">Ask. Dig. Discover.</span>
+            <span className="text-[10px] tracking-wider uppercase font-semibold text-gray-400 mt-0.5">Doubt. Dig. Discover.</span>
           </div>
         </Link>
 
@@ -472,15 +472,15 @@ function Footer({ loggedIn }: { loggedIn: boolean }) {
     <footer style={{ background: "var(--bg-base)", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
       <div className="max-w-7xl mx-auto px-6 py-12">
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-          <div onMouseEnter={playQuackSound} className="flex items-center gap-2 cursor-pointer group">
+          <div className="flex items-center gap-2 cursor-pointer group">
             <img src="/duck.png" alt="DataDuck Logo" className="w-9 h-9 object-contain transition-transform group-hover:scale-105" />
             <div className="flex flex-col justify-center">
               <span className="font-bold text-lg text-gradient-silver leading-none">DataDuck</span>
-              <span className="text-[10px] tracking-wider uppercase font-medium text-gray-500 mt-0.5">Ask. Dig. Discover.</span>
+              <span className="text-[10px] tracking-wider uppercase font-medium text-gray-500 mt-0.5">Doubt. Dig. Discover.</span>
             </div>
           </div>
           <p className="text-sm" style={{ color: "#4A4A4A" }}>
-            © {new Date().getFullYear()} DataDuck. Ask. Dig. Discover. Read-only. Secure.
+            © {new Date().getFullYear()} DataDuck. Doubt. Dig. Discover. Read-only. Secure.
           </p>
           <div className="flex gap-6">
             {loggedIn ? (

@@ -67,6 +67,39 @@ body {
   line-height: 1.6;
 }
 
+/* ── Universal Pointer (Finger) Cursor for all Buttons & Interactive Elements ── */
+button,
+[role="button"],
+a,
+select,
+summary,
+label[for],
+input[type="submit"],
+input[type="button"],
+input[type="reset"],
+input[type="checkbox"],
+input[type="radio"],
+.btn-primary,
+.btn-ghost,
+.btn-danger,
+.cursor-pointer,
+[onclick],
+[tabindex="0"] {
+  cursor: pointer;
+}
+
+/* Maintain disabled state */
+button:disabled,
+button[disabled],
+input:disabled,
+input[disabled],
+select:disabled,
+select[disabled],
+[aria-disabled="true"],
+.cursor-not-allowed {
+  cursor: not-allowed !important;
+}
+
 /* ── Typography ── */
 .text-gradient-silver {
   background: var(--gradient-silver);
